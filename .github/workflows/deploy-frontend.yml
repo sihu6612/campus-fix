@@ -28,9 +28,9 @@ jobs:
           npm ci
           npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+          VITE_SUPABASE_URL: https://rgtvzpwbwikjbamyoahs.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJndHZ6cHdia3dpamtiYW15b2FocyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQ4MTczNjM5LCJleHAiOjIwNjM3NDk2Mzl9.ZXMGxcNFbBi4Yl_c9AYgHmZ3mVXKZAO3Sp8veZlFPos
+          VITE_API_BASE: https://campusfix-api.up.railway.app
 
       - uses: actions/configure-pages@v4
 

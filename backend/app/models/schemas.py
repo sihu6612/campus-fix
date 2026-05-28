@@ -108,3 +108,15 @@ class ImageAnalysisResult(BaseModel):
     complexity: str = "simple"
     urgency: str = "normal"
     confidence: float = 0.0
+
+
+# --- AI 智能客服 ---
+class AgentChatRequest(BaseModel):
+    message: str
+    role: str = "student"
+    page: str = ""
+    order_id: Optional[str] = None
+
+
+class AgentChatResponse(BaseModel):
+    reply: str

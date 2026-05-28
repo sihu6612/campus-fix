@@ -58,7 +58,7 @@ def create_order(data: OrderCreate, student_id: str = Query(...)):
 @router.patch("/{order_id}")
 def update_order(order_id: str, data: OrderUpdate):
     supabase = get_supabase()
-    updates = {k: v for k, v in data.model_dump().items() if v is not None}
+    updates = {k: v for k, v in data.model_dump(mode="json").items() if v is not None}
     result = supabase.update("repair_orders", updates, {"id": f"eq.{order_id}"})
     return result[0] if result else {}
 

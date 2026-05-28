@@ -24,7 +24,7 @@ MOCK_REPLY = "你好！我是校修通智能助手（当前为离线模式）。
 
 
 async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None) -> str:
-    if not settings.dashscope_api_key:
+    if not settings.deepseek_api_key:
         return MOCK_REPLY
 
     role_names = {"student": "学生", "worker": "师傅", "admin": "管理员"}
@@ -47,13 +47,13 @@ async def chat_with_agent(message: str, role: str, page: str, order_info: dict |
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+                "https://api.deepseek.com/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.dashscope_api_key}",
+                    "Authorization": f"Bearer {settings.deepseek_api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "qwen-plus",
+                    "model": "deepseek-chat",
                     "messages": messages,
                     "max_tokens": 500,
                 },

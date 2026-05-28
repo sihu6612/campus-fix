@@ -33,7 +33,7 @@
       </n-layout-content>
     </n-layout>
 
-    <div class="fab">
+    <div v-show="!agentPanelOpen" class="fab">
       <n-button type="primary" circle size="large" @click="$router.push('/student/create')">
         <template #icon><n-icon size="24"><AddOutline /></n-icon></template>
       </n-button>
@@ -53,6 +53,7 @@ import { PersonCircleOutline, AddOutline, ListOutline, AddCircleOutline } from '
 import { useAuthStore } from '../../stores/auth.js'
 import { useOrdersStore } from '../../stores/orders.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
+import { agentPanelOpen } from '../../composables/useAgent.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()

@@ -22,19 +22,19 @@ CATEGORY_PROMPT = """你是一个校园维修助手。根据图片判断维修�
 
 
 async def analyze_image(image_url: str) -> dict:
-    """用通义千问 VL 分析维修图片"""
-    if not settings.dashscope_api_key:
+    """用智谱 GLM-4.6V-Flash 分析维修图片"""
+    if not settings.zhipu_api_key:
         return _mock_analysis()
 
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
-            "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+            "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.dashscope_api_key}",
+                "Authorization": f"Bearer {settings.zhipu_api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "qwen-vl-plus",
+                "model": "glm-4.6v-flash",
                 "messages": [
                     {
                         "role": "user",
@@ -57,7 +57,6 @@ async def analyze_image(image_url: str) -> dict:
 
 
 def _mock_analysis() -> dict:
-    """当没有 AI API key 时返回空结果"""
     return {
         "category": "其它",
         "worker_type": "通用维修工",

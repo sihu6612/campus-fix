@@ -1,14 +1,14 @@
 <template>
   <!-- FAB 按钮 -->
-  <button v-show="!panelOpen" class="agent-fab" @click="openPanel">
+  <button v-show="!agentPanelOpen" class="agent-fab" @click="openPanel">
     <n-icon size="24"><ChatbubblesOutline /></n-icon>
   </button>
 
   <!-- 遮罩 -->
-  <div v-show="panelOpen" class="agent-overlay" @click="closePanel" />
+  <div v-show="agentPanelOpen" class="agent-overlay" @click="closePanel" />
 
   <!-- 聊天面板 -->
-  <div v-show="panelOpen" class="agent-panel">
+  <div v-show="agentPanelOpen" class="agent-panel">
     <div class="panel-header">
       <span class="panel-title">小修 · AI 助手</span>
       <n-button text size="small" @click="closePanel">
@@ -48,11 +48,11 @@ import { useRoute } from 'vue-router'
 import { ChatbubblesOutline, CloseOutline, SendOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '../stores/auth.js'
 import { api } from '../composables/useSupabase.js'
+import { agentPanelOpen } from '../composables/useAgent.js'
 
 const route = useRoute()
 const auth = useAuthStore()
 
-const panelOpen = ref(false)
 const text = ref('')
 const loading = ref(false)
 const msgList = ref(null)
@@ -74,11 +74,11 @@ function fmtNow() {
 }
 
 function openPanel() {
-  panelOpen.value = true
+  agentPanelOpen.value = true
 }
 
 function closePanel() {
-  panelOpen.value = false
+  agentPanelOpen.value = false
 }
 
 function sendQuick(q) {
@@ -126,7 +126,7 @@ function scrollBottom() {
   })
 }
 
-watch(panelOpen, (v) => { if (v) scrollBottom() })
+watch(agentPanelOpen, (v) => { if (v) scrollBottom() })
 </script>
 
 <style scoped>

@@ -70,7 +70,7 @@ MOCK_REPLY = "嗨～我是小修，校修通的 AI 助手！( currently 离线�
 
 
 async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None, history: list | None = None) -> str:
-    if not settings.deepseek_api_key:
+    if not settings.zhipu_api_key:
         return MOCK_REPLY
 
     role_names = {"student": "学生", "worker": "师傅", "admin": "管理员"}
@@ -105,13 +105,13 @@ async def chat_with_agent(message: str, role: str, page: str, order_info: dict |
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                "https://api.deepseek.com/v1/chat/completions",
+                "https://open.bigmodel.cn/api/paas/v4/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {settings.deepseek_api_key}",
+                    "Authorization": f"Bearer {settings.zhipu_api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "deepseek-chat",
+                    "model": "glm-4.7-flash",
                     "messages": messages,
                     "max_tokens": 500,
                 },

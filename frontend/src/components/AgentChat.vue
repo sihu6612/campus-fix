@@ -1,57 +1,49 @@
 <template>
-  <div class="agent-chat">
-    <!-- FAB 按钮 -->
-    <Transition name="fab-zoom">
-      <button v-if="!panelOpen" class="agent-fab" @click="openPanel">
-        <n-icon size="24"><ChatbubblesOutline /></n-icon>
-      </button>
-    </Transition>
+  <!-- FAB 按钮 -->
+  <button v-show="!panelOpen" class="agent-fab" @click="openPanel">
+    <n-icon size="24"><ChatbubblesOutline /></n-icon>
+  </button>
 
-    <!-- 遮罩 -->
-    <Transition name="fade">
-      <div v-if="panelOpen" class="agent-overlay" @click="closePanel" />
-    </Transition>
+  <!-- 遮罩 -->
+  <div v-show="panelOpen" class="agent-overlay" @click="closePanel" />
 
-    <!-- 聊天面板 -->
-    <Transition name="slide-up">
-      <div v-if="panelOpen" class="agent-panel">
-        <div class="panel-header">
-          <span class="panel-title">智能助手</span>
-          <n-button text size="small" @click="closePanel">
-            <n-icon size="20"><CloseOutline /></n-icon>
-          </n-button>
-        </div>
+  <!-- 聊天面板 -->
+  <div v-show="panelOpen" class="agent-panel">
+    <div class="panel-header">
+      <span class="panel-title">AI 智能助手</span>
+      <n-button text size="small" @click="closePanel">
+        <n-icon size="20"><CloseOutline /></n-icon>
+      </n-button>
+    </div>
 
-        <div class="panel-messages" ref="msgList">
-          <div v-for="(m, i) in messages" :key="i" :class="['msg', m.role === 'user' ? 'msg-me' : 'msg-other']">
-            <div class="msg-bubble">{{ m.content }}</div>
-            <div class="msg-time">{{ m.time }}</div>
-          </div>
-          <div v-if="loading" class="msg msg-other">
-            <div class="msg-bubble typing"><span /><span /><span /></div>
-          </div>
-        </div>
-
-        <!-- 快捷提问 -->
-        <div v-if="messages.length <= 1" class="quick-actions">
-          <n-button v-for="q in quickQuestions" :key="q" size="tiny" secondary @click="sendQuick(q)">
-            {{ q }}
-          </n-button>
-        </div>
-
-        <div class="panel-input">
-          <n-input v-model:value="text" placeholder="输入问题..." size="small" @keyup.enter="send" />
-          <n-button type="primary" size="small" :disabled="!text.trim() || loading" @click="send">
-            <template #icon><n-icon size="16"><SendOutline /></n-icon></template>
-          </n-button>
-        </div>
+    <div class="panel-messages" ref="msgList">
+      <div v-for="(m, i) in messages" :key="i" :class="['msg', m.role === 'user' ? 'msg-me' : 'msg-other']">
+        <div class="msg-bubble">{{ m.content }}</div>
+        <div class="msg-time">{{ m.time }}</div>
       </div>
-    </Transition>
+      <div v-if="loading" class="msg msg-other">
+        <div class="msg-bubble typing"><span /><span /><span /></div>
+      </div>
+    </div>
+
+    <!-- 快捷提问 -->
+    <div v-if="messages.length <= 1 && quickList.length" class="quick-actions">
+      <n-button v-for="(q, i) in quickList" :key="i" size="tiny" secondary @click="sendQuick(q)">
+        {{ q }}
+      </n-button>
+    </div>
+
+    <div class="panel-input">
+      <n-input v-model:value="text" placeholder="输入问题..." size="small" @keyup.enter="send" />
+      <n-button type="primary" size="small" :disabled="!text.trim() || loading" @click="send">
+        <template #icon><n-icon size="16"><SendOutline /></n-icon></template>
+      </n-button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ChatbubblesOutline, CloseOutline, SendOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '../stores/auth.js'
@@ -66,14 +58,16 @@ const loading = ref(false)
 const msgList = ref(null)
 
 const messages = ref([
-  { role: 'assistant', content: '你好！我是校修通智能助手，有什么可以帮你的吗？(๑•̀ㅂ•́)و✧', time: fmtNow() },
+  { role: 'assistant', content: '你好！我是校修通 AI 智能助手，有什么可以帮你的吗？', time: fmtNow() },
 ])
 
-const quickQuestions = {
+const allQuestions = {
   student: ['如何查看维修进度？', '怎么取消工单？', '报修后多久有人处理？'],
   worker: ['如何接单？', '完工后怎么操作？', '怎么看工单详情？'],
   admin: ['如何分配师傅？', '怎么看维修统计？', '工单状态有哪些？'],
 }
+
+const quickList = computed(() => allQuestions[auth.role] || allQuestions.student)
 
 function fmtNow() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -138,7 +132,7 @@ watch(panelOpen, (v) => { if (v) scrollBottom() })
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.agent-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5); }
+.agent-fab:hover { transform: scale(1.08); }
 .agent-fab:active { transform: scale(0.95); }
 
 .agent-overlay {
@@ -199,14 +193,4 @@ watch(panelOpen, (v) => { if (v) scrollBottom() })
   padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 .panel-input > :first-child { flex: 1; }
-
-/* Transitions */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.25s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.slide-up-enter-active, .slide-up-leave-active { transition: transform 0.3s ease; }
-.slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); }
-
-.fab-zoom-enter-active, .fab-zoom-leave-active { transition: transform 0.25s, opacity 0.25s; }
-.fab-zoom-enter-from, .fab-zoom-leave-to { transform: scale(0); opacity: 0; }
 </style>

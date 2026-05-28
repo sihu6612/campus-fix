@@ -30,6 +30,7 @@ async def agent_chat(req: AgentChatRequest):
             role=req.role,
             page=req.page,
             order_info=order_info,
+            history=req.history,
         )
         return {"reply": reply}
     except Exception:

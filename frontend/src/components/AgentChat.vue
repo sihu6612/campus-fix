@@ -10,7 +10,7 @@
   <!-- 聊天面板 -->
   <div v-show="panelOpen" class="agent-panel">
     <div class="panel-header">
-      <span class="panel-title">AI 智能助手</span>
+      <span class="panel-title">小修 · AI 助手</span>
       <n-button text size="small" @click="closePanel">
         <n-icon size="20"><CloseOutline /></n-icon>
       </n-button>
@@ -58,7 +58,7 @@ const loading = ref(false)
 const msgList = ref(null)
 
 const messages = ref([
-  { role: 'assistant', content: '你好！我是校修通 AI 智能助手，有什么可以帮你的吗？', time: fmtNow() },
+  { role: 'assistant', content: '嗨～我是小修，校修通的 AI 助手！有什么可以帮你的吗？(｡･ω･｡)ﾉ', time: fmtNow() },
 ])
 
 const allQuestions = {
@@ -95,6 +95,11 @@ async function send() {
   scrollBottom()
 
   try {
+    // 构建历史消息（不含当前消息和时间字段）
+    const history = messages.value.slice(0, -1).map(m => ({
+      role: m.role,
+      content: m.content,
+    }))
     const data = await api('/api/agent/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -103,6 +108,7 @@ async function send() {
         role: auth.role || 'student',
         page: route.name || route.path,
         order_id: route.params.id || null,
+        history,
       }),
     })
     messages.value.push({ role: 'assistant', content: data.reply, time: fmtNow() })

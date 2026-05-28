@@ -116,6 +116,7 @@ class AgentChatRequest(BaseModel):
     role: str = "student"
     page: str = ""
     order_id: Optional[str] = None
+    history: Optional[list] = None
 
 
 class AgentChatResponse(BaseModel):

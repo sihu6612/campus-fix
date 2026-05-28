@@ -82,7 +82,7 @@ create table if not exists status_logs (
   order_id uuid not null references repair_orders(id) on delete cascade,
   from_status text,
   to_status text not null,
-  operator_id uuid not null references profiles(id),
+  operator_id uuid references profiles(id) default null,  -- nullable: 服务端 service_role 无用户上下文
   note text default '',
   created_at timestamptz default now()
 );
@@ -181,7 +181,8 @@ returns trigger as $$
 begin
   if old.status is distinct from new.status then
     insert into status_logs (order_id, from_status, to_status, operator_id, note)
-    values (new.id, old.status, new.status, auth.uid(),
+    values (new.id, old.status, new.status,
+      coalesce(auth.uid(), new.worker_id, new.student_id),  -- service_role 调用时 auth.uid() 为 null，回退到师傅/学生 ID
       case
         when new.status = 'assigned' then '已分配师傅'
         when new.status = 'in_progress' then '师傅开始维修'

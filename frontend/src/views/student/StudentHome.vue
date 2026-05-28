@@ -99,7 +99,7 @@ onMounted(() => {
 .card-time { font-size: 12px; color: #aaa; }
 .card-title { font-size: 15px; font-weight: 600; color: #333; }
 .card-desc { font-size: 13px; color: #888; margin-top: 4px; }
-.fab { position: fixed; bottom: 80px; right: 20px; z-index: 10; }
+.fab { position: fixed; bottom: 140px; right: 20px; z-index: 10; }
 .app-tabbar { display: flex; position: fixed; bottom: 0; width: 100%; background: #fff; }
 .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0; color: #999; cursor: pointer; font-size: 11px; gap: 2px; }
 .tab-item.active { color: #4f46e5; }

@@ -111,7 +111,7 @@ async def chat_with_agent(message: str, role: str, page: str, order_info: dict |
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "glm-4.7-flash",
+                    "model": "glm-4-flash",
                     "messages": messages,
                     "max_tokens": 500,
                 },

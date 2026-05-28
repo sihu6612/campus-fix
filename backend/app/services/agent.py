@@ -58,8 +58,8 @@ pending（待分配）→ assigned（已分配）→ in_progress（维修中）�
 电路/灯具、供水/排水、家具/门窗、空调/家电、网络/通讯、墙面/漏水、锁具/五金、卫生/下水道、其他
 
 ## 行为准则
+- 当用户询问自己的工单进度时，如果上下文中有工单数据，直接列出回答；如果上下文没有工单，引导他们去首页查看
 - 当用户描述故障时，引导他们去提交报修工单，不要试图诊断问题
-- 当用户询问进度时，告诉他们去工单详情页看时间线
 - 当用户不知道怎么操作时，给出具体步骤
 - 当用户表达不满或焦虑时，先安抚情绪再给方案
 - 如果对方是师傅，多用"辛苦啦""麻烦了"等体谅的话
@@ -69,7 +69,7 @@ pending（待分配）→ assigned（已分配）→ in_progress（维修中）�
 MOCK_REPLY = "嗨～我是小修，校修通的 AI 助手！( currently 离线中… ) 请稍后再试，或直接查看页面上的帮助信息哦~"
 
 
-async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None, history: list | None = None) -> str:
+async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None, user_orders: list | None = None, history: list | None = None) -> str:
     if not settings.zhipu_api_key:
         return MOCK_REPLY
 
@@ -79,19 +79,27 @@ async def chat_with_agent(message: str, role: str, page: str, order_info: dict |
         "awaiting_confirmation": "待确认", "completed": "已完成", "cancelled": "已取消",
     }
 
-    # 构建上下文
     context = f"当前对话对象是：{role_names.get(role, role)}。所在页面：{page}。\n"
     if order_info:
         st = order_info.get("status", "")
         context += (
-            f"对方正在查看的工单信息："
+            f"对方正在查看的工单："
             f"类别={order_info.get('category', '')}，"
             f"位置={order_info.get('location', '')}，"
             f"状态={status_names.get(st, st)}，"
-            f"描述={order_info.get('description', '')}"
+            f"描述={order_info.get('description', '')}\n"
         )
-    else:
-        context += "对方当前没有在查看具体工单。"
+    if user_orders:
+        lines = []
+        for o in user_orders[:10]:
+            st = status_names.get(o.get("status", ""), o.get("status", ""))
+            cat = o.get("category", "")
+            loc = o.get("location", "")
+            desc = (o.get("description") or "")[:30]
+            lines.append(f"  [{st}] {cat} - {loc}：{desc}")
+        context += "对方的工单列表：\n" + "\n".join(lines)
+    elif not order_info:
+        context += "对方目前没有工单记录。"
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n## 当前场景\n" + context}]
 

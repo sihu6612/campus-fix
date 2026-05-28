@@ -115,6 +115,7 @@ async function send() {
         role: auth.role || 'student',
         page: route.name || route.path,
         order_id: route.params.id || null,
+        user_id: auth.userId,
         history,
       }),
     })

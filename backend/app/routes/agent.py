@@ -24,12 +24,31 @@ async def agent_chat(req: AgentChatRequest):
         except Exception:
             pass
 
+    user_orders = None
+    if req.user_id:
+        try:
+            supabase = get_supabase()
+            q = supabase.select("repair_orders", "id,category,location,description,status,urgency,created_at").order("created_at", asc=False).limit(10)
+            if req.role == "student":
+                q = q.eq("student_id", req.user_id)
+            elif req.role == "worker":
+                q = q.eq("worker_id", req.user_id)
+            else:
+                q = None  # admin: don't fetch all orders
+            if q:
+                result = q.execute()
+                if result.data:
+                    user_orders = result.data if isinstance(result.data, list) else [result.data]
+        except Exception:
+            pass
+
     try:
         reply = await chat_with_agent(
             message=req.message,
             role=req.role,
             page=req.page,
             order_info=order_info,
+            user_orders=user_orders,
             history=req.history,
         )
         return {"reply": reply}

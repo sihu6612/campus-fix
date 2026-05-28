@@ -1,6 +1,6 @@
 <template>
   <!-- FAB 按钮 -->
-  <button v-show="!agentPanelOpen" class="agent-fab" @click="openPanel">
+  <button v-show="!agentPanelOpen" class="agent-fab" :style="fabStyle" @click="openPanel">
     <n-icon size="24"><ChatbubblesOutline /></n-icon>
   </button>
 
@@ -68,6 +68,13 @@ const allQuestions = {
 }
 
 const quickList = computed(() => allQuestions[auth.role] || allQuestions.student)
+
+// 有底部固定栏的页面，FAB 需要上移避开
+const fabStyle = computed(() => {
+  const routeName = route.name || route.path
+  if (routeName === 'CreateOrder') return { bottom: '80px' }
+  return {}
+})
 
 function fmtNow() {
   return new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })

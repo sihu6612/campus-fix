@@ -10,7 +10,8 @@ create extension if not exists "uuid-ossp";
 -- ============================================
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  role text not null check (role in ('student', 'worker', 'admin')) default 'student',
+  role text not null check (role in ('student', 'worker', 'admin', 'counselor')) default 'student',
+  class_name text default '',
   display_name text not null default '',
   phone text default '',
   avatar_url text default '',
@@ -23,11 +24,12 @@ create table if not exists profiles (
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, display_name, role)
+  insert into public.profiles (id, display_name, role, class_name)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'display_name', '用户'),
-    coalesce(new.raw_user_meta_data ->> 'role', 'student')
+    coalesce(new.raw_user_meta_data ->> 'role', 'student'),
+    coalesce(new.raw_user_meta_data ->> 'class_name', '')
   );
   return new;
 end;
@@ -95,6 +97,7 @@ create index if not exists idx_orders_worker on repair_orders(worker_id);
 create index if not exists idx_orders_status on repair_orders(status);
 create index if not exists idx_messages_order on repair_messages(order_id);
 create index if not exists idx_logs_order on status_logs(order_id);
+create index if not exists idx_profiles_class on profiles(class_name);
 
 -- ============================================
 -- RLS 策略
@@ -116,6 +119,16 @@ create policy "orders_select" on repair_orders for select using (
   auth.uid() = student_id
   or auth.uid() = worker_id
   or exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+  or exists (
+    select 1 from profiles counselor
+    where counselor.id = auth.uid() and counselor.role = 'counselor'
+    and exists (
+      select 1 from profiles student
+      where student.id = repair_orders.student_id
+      and student.class_name = counselor.class_name
+      and counselor.class_name <> ''
+    )
+  )
 );
 drop policy if exists "orders_insert" on repair_orders;
 create policy "orders_insert" on repair_orders for insert with check (auth.uid() = student_id);
@@ -132,8 +145,21 @@ create policy "messages_select" on repair_messages for select using (
   exists (
     select 1 from repair_orders
     where id = repair_messages.order_id
-    and (student_id = auth.uid() or worker_id = auth.uid()
-         or exists (select 1 from profiles where id = auth.uid() and role = 'admin'))
+    and (
+      student_id = auth.uid()
+      or worker_id = auth.uid()
+      or exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+      or exists (
+        select 1 from profiles counselor
+        where counselor.id = auth.uid() and counselor.role = 'counselor'
+        and exists (
+          select 1 from profiles student
+          where student.id = repair_orders.student_id
+          and student.class_name = counselor.class_name
+          and counselor.class_name <> ''
+        )
+      )
+    )
   )
 );
 drop policy if exists "messages_insert" on repair_messages;
@@ -147,8 +173,21 @@ create policy "logs_select" on status_logs for select using (
   exists (
     select 1 from repair_orders
     where id = status_logs.order_id
-    and (student_id = auth.uid() or worker_id = auth.uid()
-         or exists (select 1 from profiles where id = auth.uid() and role = 'admin'))
+    and (
+      student_id = auth.uid()
+      or worker_id = auth.uid()
+      or exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+      or exists (
+        select 1 from profiles counselor
+        where counselor.id = auth.uid() and counselor.role = 'counselor'
+        and exists (
+          select 1 from profiles student
+          where student.id = repair_orders.student_id
+          and student.class_name = counselor.class_name
+          and counselor.class_name <> ''
+        )
+      )
+    )
   )
 );
 drop policy if exists "logs_insert" on status_logs;

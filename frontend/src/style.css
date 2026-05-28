@@ -13,3 +13,10 @@ html, body, #app { height: 100%; }
 @media (max-width: 768px) {
   .n-data-table { font-size: 13px; }
 }
+
+/* PC 端全局适配 */
+@media (min-width: 768px) {
+  body {
+    background: #f0f2f5;
+  }
+}

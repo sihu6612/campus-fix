@@ -207,4 +207,17 @@ watch(agentPanelOpen, (v) => { if (v) scrollBottom() })
   padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 .panel-input > :first-child { flex: 1; }
+
+@media (min-width: 768px) {
+  .agent-fab {
+    bottom: 32px; right: 32px;
+  }
+  .agent-panel {
+    right: 24px; left: auto; bottom: 32px;
+    width: 420px; max-height: 560px;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  }
+  .msg { max-width: 75%; }
+}
 </style>

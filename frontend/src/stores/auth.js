@@ -17,18 +17,18 @@ export const useAuthStore = defineStore('auth', {
       if (error) throw error
       // 取 profile
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single()
-      const user = { id: data.user.id, email: data.user.email, role: profile?.role || 'student', display_name: profile?.display_name || '' }
+      const user = { id: data.user.id, email: data.user.email, role: profile?.role || 'student', display_name: profile?.display_name || '', class_name: profile?.class_name || '' }
       this.user = user
       this.session = data.session
       localStorage.setItem('cf_user', JSON.stringify(user))
       localStorage.setItem('cf_session', JSON.stringify(data.session))
       return user
     },
-    async register(email, password, displayName, role) {
+    async register(email, password, displayName, role, className = '') {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { display_name: displayName, role } }
+        options: { data: { display_name: displayName, role, class_name: className } }
       })
       if (error) throw error
       return data

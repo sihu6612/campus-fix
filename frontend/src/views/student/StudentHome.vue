@@ -104,4 +104,14 @@ onMounted(() => {
 .app-tabbar { display: flex; position: fixed; bottom: 0; width: 100%; background: #fff; }
 .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0; color: #999; cursor: pointer; font-size: 11px; gap: 2px; }
 .tab-item.active { color: #4f46e5; }
+
+@media (min-width: 768px) {
+  .app-shell { background: #f0f2f5; }
+  .app-header { padding: 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+  .app-content { max-width: 960px; margin: 0 auto; padding: 16px 0 40px; }
+  .order-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .fab { right: calc(50% - 440px); bottom: 60px; }
+  .app-tabbar { display: none; }
+}
 </style>

@@ -59,4 +59,9 @@ watch(() => props.messages.length, () => {
 .msg-time { font-size: 11px; color: #bbb; margin-top: 2px; }
 .chat-input { display: flex; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #eee; }
 .chat-input :first-child { flex: 1; }
+
+@media (min-width: 768px) {
+  .chat-box { height: 480px; }
+  .msg { max-width: 60%; }
+}
 </style>

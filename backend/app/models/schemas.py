@@ -9,7 +9,8 @@ class UserRegister(BaseModel):
     email: str
     password: str
     display_name: str
-    role: str = "student"  # student / worker / admin
+    role: str = "student"  # student / worker / admin / counselor
+    class_name: str = ""   # 班级（辅导员必填）
 
 
 class UserLogin(BaseModel):
@@ -24,6 +25,7 @@ class UserProfile(BaseModel):
     phone: str = ""
     avatar_url: str = ""
     worker_type: Optional[str] = None
+    class_name: str = ""
 
 
 # --- 工单 ---

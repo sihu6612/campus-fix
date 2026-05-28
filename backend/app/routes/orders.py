@@ -19,6 +19,20 @@ def list_orders(
         query = query.eq("student_id", user_id)
     elif role == "worker":
         query = query.eq("worker_id", user_id)
+    elif role == "counselor":
+        # 获取辅导员所在班级，然后查该班学生工单
+        counselor = supabase.select("profiles", "class_name").eq("id", user_id).single().execute()
+        class_name = (counselor.data or {}).get("class_name", "")
+        if class_name:
+            # 查出该班所有学生 ID
+            students = supabase.select("profiles", "id").eq("class_name", class_name).eq("role", "student").execute()
+            student_ids = [s["id"] for s in (students.data or [])]
+            if student_ids:
+                query = query.in_("student_id", student_ids)
+            else:
+                return []  # 班级暂无学生
+        else:
+            return []
 
     if status:
         query = query.eq("status", status)

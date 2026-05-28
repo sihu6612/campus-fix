@@ -111,4 +111,12 @@ async function submit() {
 .header-inner h2 { font-size: 18px; }
 .app-content { flex: 1; overflow-y: auto; padding: 16px; }
 .submit-bar { position: fixed; bottom: 0; width: 100%; padding: 12px 16px; background: #fff; border-top: 1px solid #eee; z-index: 10; }
+
+@media (min-width: 768px) {
+  .page { background: #f0f2f5; }
+  .app-header { padding: 0; }
+  .header-inner { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  .app-content { max-width: 720px; margin: 0 auto; padding: 24px 0 80px; }
+  .submit-bar { max-width: 720px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+}
 </style>

@@ -112,4 +112,11 @@ onMounted(async () => {
 .app-content { flex: 1; overflow-y: auto; padding: 16px; }
 .confirm-title { font-size: 16px; font-weight: 600; color: #16a34a; margin-bottom: 12px; text-align: center; }
 .rating-area { display: flex; justify-content: center; padding: 16px; }
+
+@media (min-width: 768px) {
+  .page { background: #f0f2f5; }
+  .app-header { padding: 0; }
+  .header-inner { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  .app-content { max-width: 720px; margin: 0 auto; padding: 24px 0; }
+}
 </style>

@@ -12,6 +12,7 @@ def register(data: UserRegister):
         resp = supabase.auth_signup(data.email, data.password, {
             "display_name": data.display_name,
             "role": data.role,
+            "class_name": data.class_name,
         })
         return {"user": resp.get("user"), "session": resp.get("session")}
     except Exception as e:

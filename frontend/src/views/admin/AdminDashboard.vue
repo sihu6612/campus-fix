@@ -152,4 +152,12 @@ onMounted(async () => {
 .card-title { font-size: 15px; font-weight: 600; color: #333; }
 .card-desc { font-size: 13px; color: #888; margin-top: 4px; }
 .card-meta { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+@media (min-width: 768px) {
+  .app-shell { background: #f0f2f5; }
+  .app-header { padding: 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+  .app-content { max-width: 960px; margin: 0 auto; padding: 16px 0 40px; }
+  .order-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
 </style>

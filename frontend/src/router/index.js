@@ -12,6 +12,8 @@ const routes = [
   { path: '/worker/order/:id', name: 'worker-order', component: () => import('../views/worker/WorkOrder.vue') },
   { path: '/admin', name: 'admin-dashboard', component: () => import('../views/admin/AdminDashboard.vue') },
   { path: '/admin/order/:id', name: 'admin-order', component: () => import('../views/student/OrderDetail.vue') },
+  { path: '/counselor', name: 'counselor-home', component: () => import('../views/counselor/CounselorHome.vue') },
+  { path: '/counselor/order/:id', name: 'counselor-order', component: () => import('../views/counselor/CounselorOrder.vue') },
 ]
 
 const router = createRouter({
@@ -26,7 +28,10 @@ router.beforeEach((to, from) => {
   }
   if (session && to.path === '/login') {
     const user = JSON.parse(localStorage.getItem('cf_user') || '{}')
-    return user.role === 'admin' ? '/admin' : user.role === 'worker' ? '/worker' : '/student'
+    if (user.role === 'admin') return '/admin'
+    if (user.role === 'worker') return '/worker'
+    if (user.role === 'counselor') return '/counselor'
+    return '/student'
   }
 })
 

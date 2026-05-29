@@ -2,21 +2,57 @@
   "name": "campus-fix",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "vite build --base=./ && electron .",
+    "electron:dist": "vite build --base=./ && electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.campusfix.app",
+    "productName": "校修通",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "npmRebuild": false,
+    "npmArgs": [
+      "--silent"
+    ],
+    "win": {
+      "icon": "public/icon-512.png",
+      "target": [
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "校修通.exe"
+    }
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
-    "@vicons/ionicons5": "^0.13.0",
-    "naive-ui": "^2.39.0",
-    "pinia": "^2.2.0",
-    "vue": "^3.5.0",
-    "vue-router": "^4.4.0"
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@vicons/ionicons5": "^0.13.0",
     "@vitejs/plugin-vue": "^5.1.0",
-    "vite": "^5.4.0"
+    "electron": "^42.3.0",
+    "electron-builder": "^26.8.1",
+    "naive-ui": "^2.39.0",
+    "pinia": "^2.2.0",
+    "typescript": "^6.0.3",
+    "vite": "^5.4.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.4.0"
   }
 }

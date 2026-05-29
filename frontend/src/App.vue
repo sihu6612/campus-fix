@@ -34,7 +34,61 @@ const router = useRouter()
 const showAgent = computed(() => route.path !== '/login')
 
 const themeOverrides = {
-  common: { primaryColor: '#4f46e5', primaryColorHover: '#6366f1' },
+  common: {
+    primaryColor: '#4f46e5',
+    primaryColorHover: '#6366f1',
+    primaryColorPressed: '#4338ca',
+    primaryColorSuppl: '#6366f1',
+    borderRadius: '8px',
+    borderRadiusSmall: '6px',
+    fontSize: '15px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
+  },
+  Button: {
+    borderRadiusSmall: '6px',
+    borderRadiusMedium: '8px',
+    borderRadiusLarge: '12px',
+    textColor: '#4f46e5',
+    border: '1px solid #e2e8f0',
+    textColorGhost: '#64748b',
+    borderHover: '1px solid #4f46e5',
+    colorHover: '#ede9fe',
+    textColorHover: '#4f46e5',
+  },
+  Input: {
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    borderHover: '1px solid #6366f1',
+    borderFocus: '1px solid #4f46e5',
+    boxShadowFocus: '0 0 0 3px rgba(79,70,229,0.12)',
+  },
+  Card: {
+    borderRadius: '12px',
+    paddingSmall: '12px',
+    paddingMedium: '16px',
+    paddingLarge: '20px',
+    titleFontSizeSmall: '15px',
+    titleFontSizeMedium: '16px',
+    borderColor: '#f1f5f9',
+  },
+  Tag: {
+    borderRadius: '6px',
+  },
+  Tabs: {
+    tabTextColor: '#64748b',
+    barColor: '#4f46e5',
+  },
+  Dialog: {
+    borderRadius: '16px',
+  },
+  Select: {
+    peers: {
+      InternalSelection: {
+        borderRadius: '8px',
+        border: '1px solid #e2e8f0',
+      },
+    },
+  },
 }
 
 function goBack() {

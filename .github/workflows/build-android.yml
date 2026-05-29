@@ -34,7 +34,11 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          npm run build
+          npx vite build --base=./
+        env:
+          VITE_SUPABASE_URL: https://rgtvzpwbwikjbamyoahs.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_UqNqBlNxh93qtM4-U5Imag_LOuURVIZ
+          VITE_API_BASE: https://campus-fix-production.up.railway.app
         env:
           VITE_SUPABASE_URL: https://rgtvzpwbwikjbamyoahs.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_UqNqBlNxh93qtM4-U5Imag_LOuURVIZ

@@ -1,55 +1,37 @@
 <template>
-  <div class="page">
-    <n-layout>
-      <n-layout-header bordered class="app-header">
-        <div class="header-inner">
-          <n-button text @click="$router.back()"><n-icon size="20"><ArrowBackOutline /></n-icon></n-button>
-          <h2>工单操作</h2>
-          <StatusBadge v-if="order" :status="order.status" />
-        </div>
-      </n-layout-header>
+  <div class="page-content" v-if="order">
+    <n-card size="small" title="报修信息">
+      <n-descriptions label-placement="left" :column="1" size="small">
+        <n-descriptions-item label="类型">{{ order.category }}</n-descriptions-item>
+        <n-descriptions-item label="位置">{{ order.location }}</n-descriptions-item>
+        <n-descriptions-item label="描述">{{ order.description }}</n-descriptions-item>
+        <n-descriptions-item label="学生">{{ order.student_name }}</n-descriptions-item>
+        <n-descriptions-item v-if="order.suggested_parts?.length" label="建议配件">
+          {{ order.suggested_parts.join('、') }}
+        </n-descriptions-item>
+      </n-descriptions>
+      <div v-if="order.image_urls?.length" style="margin-top:8px">
+        <img v-for="url in order.image_urls" :key="url" :src="url" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-right:8px" />
+      </div>
+    </n-card>
 
-      <n-layout-content class="app-content" v-if="order">
-        <n-card size="small" title="报修信息">
-          <n-descriptions label-placement="left" :column="1" size="small">
-            <n-descriptions-item label="类型">{{ order.category }}</n-descriptions-item>
-            <n-descriptions-item label="位置">{{ order.location }}</n-descriptions-item>
-            <n-descriptions-item label="描述">{{ order.description }}</n-descriptions-item>
-            <n-descriptions-item label="学生">{{ order.student_name }}</n-descriptions-item>
-            <n-descriptions-item v-if="order.suggested_parts?.length" label="建议配件">
-              {{ order.suggested_parts.join('、') }}
-            </n-descriptions-item>
-          </n-descriptions>
-          <div v-if="order.image_urls?.length" style="margin-top:8px">
-            <img v-for="url in order.image_urls" :key="url" :src="url" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-right:8px" />
-          </div>
-        </n-card>
+    <n-space vertical style="margin-top:16px">
+      <n-button v-if="order.status === 'assigned'" type="primary" block size="large" :loading="loading" @click="acceptOrder">确认接单</n-button>
+      <n-button v-if="order.status === 'in_progress'" type="primary" block size="large" :loading="loading" @click="submitComplete">提交完工</n-button>
+    </n-space>
 
-        <!-- 操作按钮 -->
-        <n-space vertical style="margin-top:16px">
-          <n-button v-if="order.status === 'assigned'" type="primary" block size="large" :loading="loading" @click="acceptOrder">
-            确认接单
-          </n-button>
-          <n-button v-if="order.status === 'in_progress'" type="primary" block size="large" :loading="loading" @click="submitComplete">
-            提交完工
-          </n-button>
-        </n-space>
+    <n-modal v-model:show="showComplete" preset="card" title="提交完工">
+      <n-input v-model:value="completeNote" type="textarea" placeholder="维修说明..." :autosize="{ minRows: 2 }" />
+      <n-button type="primary" block :loading="loading" @click="doComplete" style="margin-top:16px">确认完工</n-button>
+    </n-modal>
 
-        <!-- 完工表单 -->
-        <n-modal v-model:show="showComplete" preset="card" title="提交完工">
-          <n-input v-model:value="completeNote" type="textarea" placeholder="维修说明..." :autosize="{ minRows: 2 }" />
-          <n-button type="primary" block :loading="loading" @click="doComplete" style="margin-top:16px">确认完工</n-button>
-        </n-modal>
+    <n-card size="small" title="沟通记录" style="margin-top:12px">
+      <ChatBox :messages="messages" :user-id="auth.userId" @send="onSend" />
+    </n-card>
 
-        <n-card size="small" title="沟通记录" style="margin-top:12px">
-          <ChatBox :messages="messages" :user-id="auth.userId" @send="onSend" />
-        </n-card>
-
-        <n-card v-if="logs.length" size="small" title="进度记录" style="margin-top:12px">
-          <OrderTimeline :logs="logs" />
-        </n-card>
-      </n-layout-content>
-    </n-layout>
+    <n-card v-if="logs.length" size="small" title="进度记录" style="margin-top:12px">
+      <OrderTimeline :logs="logs" />
+    </n-card>
   </div>
 </template>
 
@@ -57,7 +39,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { ArrowBackOutline } from '@vicons/ionicons5'
 import { useAuthStore } from '../../stores/auth.js'
 import { useOrdersStore } from '../../stores/orders.js'
 import { subscribeMessages } from '../../composables/useRealtime.js'
@@ -130,16 +111,14 @@ onUnmounted(() => { if (msgSub) msgSub.unsubscribe() })
 </script>
 
 <style scoped>
-.page { height: 100vh; display: flex; flex-direction: column; }
-.app-header { padding: 0 16px; }
-.header-inner { display: flex; justify-content: space-between; align-items: center; height: 56px; }
-.header-inner h2 { font-size: 18px; }
-.app-content { flex: 1; overflow-y: auto; padding: 16px 16px 24px; }
+.page-content {
+  padding: 16px 16px 24px;
+}
 
 @media (min-width: 768px) {
-  .page { background: #f0f2f5; }
-  .app-header { padding: 0; }
-  .header-inner { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-  .app-content { max-width: 720px; margin: 0 auto; padding: 24px 0; }
+  .page-content {
+    max-width: 800px;
+    padding: 0;
+  }
 }
 </style>

@@ -13,22 +13,22 @@
       </n-tabs>
 
       <n-form v-if="tab === 'login'" @submit.prevent="handleLogin">
-        <n-form-item><n-input v-model:value="email" placeholder="邮箱" clearable /></n-form-item>
-        <n-form-item><n-input v-model:value="password" type="password" placeholder="密码" show-password-on="click" @keyup.enter="handleLogin" /></n-form-item>
-        <n-button type="primary" block :loading="loading" @click="handleLogin">登录</n-button>
+        <n-form-item><n-input v-model:value="email" placeholder="邮箱" clearable size="large" /></n-form-item>
+        <n-form-item><n-input v-model:value="password" type="password" placeholder="密码" show-password-on="click" size="large" @keyup.enter="handleLogin" /></n-form-item>
+        <n-button type="primary" block size="large" :loading="loading" @click="handleLogin">{{ loading ? '登录中...' : '登录' }}</n-button>
       </n-form>
 
       <n-form v-else @submit.prevent="handleRegister">
-        <n-form-item><n-input v-model:value="email" placeholder="邮箱" clearable /></n-form-item>
-        <n-form-item><n-input v-model:value="displayName" placeholder="你的名字" clearable /></n-form-item>
+        <n-form-item><n-input v-model:value="email" placeholder="邮箱" clearable size="large" /></n-form-item>
+        <n-form-item><n-input v-model:value="displayName" placeholder="你的名字" clearable size="large" /></n-form-item>
         <n-form-item>
-          <n-select v-model:value="regRole" placeholder="选择角色" :options="roleOptions" />
+          <n-select v-model:value="regRole" placeholder="选择角色" :options="roleOptions" size="large" />
         </n-form-item>
         <n-form-item v-if="regRole === 'counselor'">
-          <n-input v-model:value="className" placeholder="班级（如：软件工程2101）" clearable />
+          <n-input v-model:value="className" placeholder="班级（如：软件工程2101）" clearable size="large" />
         </n-form-item>
-        <n-form-item><n-input v-model:value="password" type="password" placeholder="密码（至少6位）" show-password-on="click" /></n-form-item>
-        <n-button type="primary" block :loading="loading" @click="handleRegister">注册</n-button>
+        <n-form-item><n-input v-model:value="password" type="password" placeholder="密码（至少6位）" show-password-on="click" size="large" /></n-form-item>
+        <n-button type="primary" block size="large" :loading="loading" @click="handleRegister">{{ loading ? '注册中...' : '注册' }}</n-button>
       </n-form>
     </div>
   </div>

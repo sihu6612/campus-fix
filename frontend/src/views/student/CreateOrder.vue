@@ -1,60 +1,53 @@
 <template>
-  <div class="page">
-    <n-layout>
-      <n-layout-header bordered class="app-header">
-        <div class="header-inner">
-          <n-button text @click="$router.back()"><n-icon size="20"><ArrowBackOutline /></n-icon></n-button>
-          <h2>新建报修</h2>
-          <div style="width:36px"></div>
-        </div>
-      </n-layout-header>
-
-      <n-layout-content class="app-content">
-        <n-form ref="formRef" :model="form" label-placement="top">
-          <n-form-item label="报修类型">
-            <n-select v-model:value="form.category" placeholder="选择类型" :options="catOpts" />
-          </n-form-item>
-          <n-form-item label="具体位置">
-            <n-input v-model:value="form.location" placeholder="如：教学楼A 301室" clearable />
-          </n-form-item>
-          <n-form-item label="问题描述">
-            <n-input v-model:value="form.description" type="textarea" placeholder="请描述具体问题..." :autosize="{ minRows: 3 }" />
-          </n-form-item>
-          <n-form-item label="现场照片">
-            <ImageUpload auto-analyze :label="'拍照或上传'"
-              @uploaded="url => form.image_urls = url ? [url] : []"
-              @analyzed="onAnalyzed" />
-          </n-form-item>
-          <n-form-item v-if="form.ai_analysis" label="AI 分析结果">
-            <n-card size="small" :bordered="true" style="background:#f8f7ff">
-              <div><n-tag type="info" size="small">{{ form.ai_analysis.category }}</n-tag> {{ form.ai_analysis.worker_type }}</div>
-              <div style="margin-top:4px;font-size:13px;color:#666">
-                难度：{{ cpxMap[form.ai_analysis.complexity] || form.ai_analysis.complexity }}
-                · 紧急：{{ form.urgency === 'urgent' ? '紧急' : '普通' }}
-              </div>
-            </n-card>
-          </n-form-item>
-          <n-form-item label="紧急程度">
-            <n-radio-group v-model:value="form.urgency">
-              <n-radio value="normal">普通</n-radio>
-              <n-radio value="urgent">紧急</n-radio>
-            </n-radio-group>
-          </n-form-item>
-        </n-form>
-      </n-layout-content>
-    </n-layout>
+  <div class="page-content">
+    <n-form ref="formRef" :model="form" label-placement="top">
+      <n-form-item label="报修类型" required :feedback="errors.category">
+        <n-select v-model:value="form.category" placeholder="选择类型" :options="catOpts" :status="errors.category ? 'error' : undefined" />
+      </n-form-item>
+      <n-form-item label="具体位置" required :feedback="errors.location">
+        <n-input v-model:value="form.location" placeholder="如：教学楼A 301室" clearable :status="errors.location ? 'error' : undefined" />
+      </n-form-item>
+      <n-form-item label="问题描述" required :feedback="errors.description">
+        <n-input v-model:value="form.description" type="textarea" placeholder="请描述具体问题..."
+          :autosize="{ minRows: 3, maxRows: 6 }" :status="errors.description ? 'error' : undefined" show-count />
+      </n-form-item>
+      <n-form-item label="现场照片">
+        <ImageUpload auto-analyze :label="'拍照或上传'"
+          @uploaded="url => form.image_urls = url ? [url] : []"
+          @analyzed="onAnalyzed" />
+      </n-form-item>
+      <n-form-item v-if="analyzing" label="AI 分析">
+        <div class="skeleton-card"><div class="skeleton skeleton-line w80"></div><div class="skeleton skeleton-line w60" style="margin-top:8px;height:12px"></div></div>
+      </n-form-item>
+      <n-form-item v-else-if="form.ai_analysis" label="AI 分析结果">
+        <n-card size="small" :bordered="true" style="background:#f8f7ff">
+          <div><n-tag type="info" size="small">{{ form.ai_analysis.category }}</n-tag> {{ form.ai_analysis.worker_type }}</div>
+          <div style="margin-top:4px;font-size:13px;color:#666">
+            难度：{{ cpxMap[form.ai_analysis.complexity] || form.ai_analysis.complexity }}
+            · 紧急：{{ form.urgency === 'urgent' ? '紧急' : '普通' }}
+          </div>
+        </n-card>
+      </n-form-item>
+      <n-form-item label="紧急程度">
+        <n-radio-group v-model:value="form.urgency">
+          <n-radio value="normal">普通</n-radio>
+          <n-radio value="urgent">紧急</n-radio>
+        </n-radio-group>
+      </n-form-item>
+    </n-form>
 
     <div class="submit-bar safe-bottom">
-      <n-button type="primary" block size="large" :loading="submitting" @click="submit">提交报修</n-button>
+      <n-button type="primary" block size="large" :loading="submitting" @click="submit">
+        <template #default>{{ submitting ? '提交中...' : '提交报修' }}</template>
+      </n-button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { ArrowBackOutline } from '@vicons/ionicons5'
 import { useOrdersStore } from '../../stores/orders.js'
 import ImageUpload from '../../components/ImageUpload.vue'
 
@@ -62,6 +55,7 @@ const router = useRouter()
 const message = useMessage()
 const store = useOrdersStore()
 const submitting = ref(false)
+const analyzing = ref(false)
 
 const catOpts = [
   { label: '电路/灯具', value: '电路/灯具' }, { label: '供水/管道', value: '供水/管道' },
@@ -78,6 +72,14 @@ const form = ref({
   urgency: 'normal', ai_analysis: null, suggested_parts: [], complexity: 'simple',
 })
 
+const errors = reactive({ category: '', location: '', description: '' })
+
+function clearErrors() {
+  errors.category = ''
+  errors.location = ''
+  errors.description = ''
+}
+
 function onAnalyzed(analysis) {
   if (!analysis) return
   form.value.ai_analysis = analysis
@@ -88,10 +90,13 @@ function onAnalyzed(analysis) {
 }
 
 async function submit() {
-  if (!form.value.category || !form.value.location || !form.value.description) {
-    message.warning('请填写类型、位置和描述')
-    return
-  }
+  clearErrors()
+  let valid = true
+  if (!form.value.category) { errors.category = '请选择报修类型'; valid = false }
+  if (!form.value.location.trim()) { errors.location = '请填写具体位置'; valid = false }
+  if (!form.value.description.trim()) { errors.description = '请描述具体问题'; valid = false }
+  if (!valid) return
+
   submitting.value = true
   try {
     await store.createOrder(form.value)
@@ -105,18 +110,31 @@ async function submit() {
 </script>
 
 <style scoped>
-.page { height: 100vh; display: flex; flex-direction: column; }
-.app-header { padding: 0 16px; }
-.header-inner { display: flex; justify-content: space-between; align-items: center; height: 56px; }
-.header-inner h2 { font-size: 18px; }
-.app-content { flex: 1; overflow-y: auto; padding: 16px; }
-.submit-bar { position: fixed; bottom: 0; width: 100%; padding: 12px 16px; background: #fff; border-top: 1px solid #eee; z-index: 10; }
+.page-content {
+  padding: 16px 16px 100px;
+}
+
+.submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 16px;
+  background: #fff;
+  border-top: 1px solid #eee;
+  z-index: 10;
+}
 
 @media (min-width: 768px) {
-  .page { background: #f0f2f5; }
-  .app-header { padding: 0; }
-  .header-inner { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-  .app-content { max-width: 720px; margin: 0 auto; padding: 24px 0 80px; }
-  .submit-bar { max-width: 720px; left: 50%; transform: translateX(-50%); border-radius: 12px 12px 0 0; }
+  .page-content {
+    max-width: 720px;
+    padding: 0 0 80px;
+  }
+  .submit-bar {
+    position: static;
+    padding: 16px 0 0;
+    border: none;
+    background: transparent;
+  }
 }
 </style>

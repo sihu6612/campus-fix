@@ -1,26 +1,21 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides" :locale="zhCN" :date-locale="dateZhCN">
     <n-message-provider>
-      <template v-if="!route.meta.layout">
-        <router-view v-slot="{ Component }">
-          <transition name="page-slide" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
-      </template>
-      <AppLayout
-        v-else
-        :title="route.meta.title || ''"
-        :show-back="route.meta.showBack || false"
-        :breadcrumbs="route.meta.breadcrumbs || []"
-        @back="goBack"
-      >
-        <router-view v-slot="{ Component: InnerComp }">
-          <transition name="page-slide" mode="out-in">
-            <component :is="InnerComp" />
-          </transition>
-        </router-view>
-      </AppLayout>
+      <router-view v-slot="{ Component, route: r }">
+        <transition name="page-slide" mode="out-in">
+          <component :is="Component" :key="r.path" v-if="!r.meta.layout" />
+          <AppLayout
+            v-else
+            :key="r.path + '-layout'"
+            :title="r.meta.title || ''"
+            :show-back="r.meta.showBack || false"
+            :breadcrumbs="r.meta.breadcrumbs || []"
+            @back="goBack"
+          >
+            <component :is="Component" :key="r.path" />
+          </AppLayout>
+        </transition>
+      </router-view>
       <AgentChat v-if="showAgent" />
     </n-message-provider>
   </n-config-provider>

@@ -95,12 +95,39 @@ const roleLabel = computed(() => {
   return map[auth.role] || ''
 })
 
-const menuOpts = [{ label: '退出登录', key: 'logout' }]
+import { useDialog, useMessage } from 'naive-ui'
+
+const dialog = useDialog()
+const message = useMessage()
+
+const menuOpts = [
+  { label: '退出登录', key: 'logout' },
+  { label: '删除账号', key: 'deleteAccount' },
+]
 
 function handleMenu(key) {
   if (key === 'logout') {
     auth.logout()
     router.push('/login')
+  }
+  if (key === 'deleteAccount') {
+    dialog.warning({
+      title: '确认删除账号',
+      content: '删除后所有工单和数据将被永久清除，不可恢复。确定要删除吗？',
+      positiveText: '确定删除',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        try {
+          const session = JSON.parse(localStorage.getItem('cf_session') || '{}')
+          await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/auth/account?user_id=${auth.userId}&access_token=${session.access_token || ''}`, { method: 'DELETE' })
+          message.success('账号已删除')
+          auth.logout()
+          router.push('/login')
+        } catch {
+          message.error('删除失败，请重试')
+        }
+      },
+    })
   }
 }
 

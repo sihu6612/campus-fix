@@ -21,10 +21,14 @@
       </n-form-item>
       <n-form-item v-else-if="form.ai_analysis" label="AI 分析结果">
         <n-card size="small" :bordered="true" style="background:#f8f7ff">
-          <div><n-tag type="info" size="small">{{ form.ai_analysis.category }}</n-tag> {{ form.ai_analysis.worker_type }}</div>
-          <div style="margin-top:4px;font-size:13px;color:#666">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <n-tag type="info" size="small">{{ form.ai_analysis.category }}</n-tag>
+            <span style="font-size:14px;color:#333">{{ form.ai_analysis.description }}</span>
+          </div>
+          <div style="font-size:13px;color:#666">
             难度：{{ cpxMap[form.ai_analysis.complexity] || form.ai_analysis.complexity }}
             · 紧急：{{ form.urgency === 'urgent' ? '紧急' : '普通' }}
+            · 配件：{{ form.ai_analysis.suggested_parts?.join('、') || '无' }}
           </div>
         </n-card>
       </n-form-item>
@@ -84,6 +88,7 @@ function onAnalyzed(analysis) {
   if (!analysis) return
   form.value.ai_analysis = analysis
   form.value.category = analysis.category || form.value.category
+  form.value.description = analysis.description || form.value.description
   form.value.complexity = analysis.complexity || 'simple'
   form.value.suggested_parts = analysis.suggested_parts || []
   if (analysis.urgency === 'urgent') form.value.urgency = 'urgent'

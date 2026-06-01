@@ -2,12 +2,13 @@ import json
 import httpx
 from app.config import settings
 
-CATEGORY_PROMPT = """你是一个校园维修助手。根据图片判断维修问题的大类。
+CATEGORY_PROMPT = """你是一个校园维修助手。根据图片判断维修问题，并生成一条简洁的问题描述。
 
 请严格按以下 JSON 格式返回，不要输出其他内容：
 {
   "category": "电路/灯具|供水/管道|家具/门窗|空调/电器|网络/弱电|墙面/渗水|锁具/五金|卫生/下水|其它",
   "worker_type": "电工|水工|木工|空调师傅|弱电师傅|泥水工|锁匠|管道工|通用维修工",
+  "description": "用一句话描述图中看到的具体问题，20字以内",
   "suggested_parts": ["配件1", "配件2"],
   "complexity": "simple|medium|complex",
   "urgency": "normal|urgent",
@@ -60,6 +61,7 @@ def _mock_analysis() -> dict:
     return {
         "category": "其它",
         "worker_type": "通用维修工",
+        "description": "疑似设备故障，需现场确认",
         "suggested_parts": [],
         "complexity": "simple",
         "urgency": "normal",

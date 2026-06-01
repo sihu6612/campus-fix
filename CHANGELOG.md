@@ -2,6 +2,9 @@
 
 ## 2026-06-01
 
+### fix: 添加 n-dialog-provider 修复白屏
+- App.vue 缺 n-dialog-provider 导致 useDialog 上下文缺失，管理员面板白屏
+
 ### feat: 管理员隐藏入口 + 用户管理
 - 登录页连点标题 5 次出现隐藏管理员注册入口，密钥保护
 - 后端新增 `POST /api/auth/admin/register`、`GET /api/auth/admin/users`、`DELETE /api/auth/admin/users/{id}`

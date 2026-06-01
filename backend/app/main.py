@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.config import settings
-from app.routes import auth, orders, messages, upload, agent
+from app.routes import auth, orders, messages, upload, agent, knowledge
 
 app = FastAPI(title="校修通 CampusFix", version="0.1.0")
 
@@ -21,6 +21,7 @@ app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
 app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
 app.include_router(upload.router, prefix="/api/upload", tags=["upload"])
 app.include_router(agent.router, prefix="/api/agent", tags=["agent"])
+app.include_router(knowledge.router, prefix="/api/knowledge", tags=["knowledge"])
 
 
 @app.get("/api/health")

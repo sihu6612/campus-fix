@@ -64,12 +64,13 @@ pending（待分配）→ assigned（已分配）→ in_progress（维修中）�
 - 当用户表达不满或焦虑时，先安抚情绪再给方案
 - 如果对方是师傅，多用"辛苦啦""麻烦了"等体谅的话
 - 如果对方是管理员，提供全局视角的建议
-- 不知道的就说不知道，不要编造"""
+- 不知道的就说不知道，不要编造
+- 如果上下文中有知识库案例，可以参考历史解决方案来回答相似问题，但要说明"根据以往维修记录""""
 
 MOCK_REPLY = "嗨～我是小修，校修通的 AI 助手！( currently 离线中… ) 请稍后再试，或直接查看页面上的帮助信息哦~"
 
 
-async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None, user_orders: list | None = None, history: list | None = None) -> str:
+async def chat_with_agent(message: str, role: str, page: str, order_info: dict | None = None, user_orders: list | None = None, history: list | None = None, knowledge_cases: list | None = None) -> str:
     if not settings.zhipu_api_key:
         return MOCK_REPLY
 
@@ -100,6 +101,16 @@ async def chat_with_agent(message: str, role: str, page: str, order_info: dict |
         context += "对方的工单列表：\n" + "\n".join(lines)
     elif not order_info:
         context += "对方目前没有工单记录。"
+
+    if knowledge_cases:
+        context += "\n\n## 知识库匹配案例\n以下是从维修知识库中匹配到的相似已完成工单，可以在回答时引用：\n"
+        for i, c in enumerate(knowledge_cases):
+            context += (
+                f"{i+1}. [{c.get('category', '')}] {c.get('description', '')}\n"
+                f"   解决方案：{c.get('solution', '无')}\n"
+                f"   使用配件：{', '.join(c.get('parts', [])) or '无'}\n"
+                f"   处理师傅：{c.get('worker', '未知')}\n"
+            )
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n## 当前场景\n" + context}]
 

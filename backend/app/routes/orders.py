@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.supabase import get_supabase
-from app.models.schemas import OrderCreate, OrderUpdate
+from app.models.schemas import OrderCreate, OrderUpdate, BatchUpdate
 from typing import Optional
 import re
 
@@ -20,6 +20,8 @@ def list_orders(
     user_id: str = Query(...),
     role: str = Query(...),
     status: Optional[str] = None,
+    category: Optional[str] = None,
+    class_name: Optional[str] = None,
 ):
     _validate_uuid(user_id, "user_id")
     supabase = get_supabase()
@@ -30,20 +32,27 @@ def list_orders(
     elif role == "worker":
         query = query.eq("worker_id", user_id)
     elif role == "counselor":
-        # 获取辅导员所在班级，然后查该班学生工单
         counselor = supabase.select("profiles", "class_name").eq("id", user_id).single().execute()
-        class_name = (counselor.data or {}).get("class_name", "")
-        if class_name:
-            # 查出该班所有学生 ID
-            students = supabase.select("profiles", "id").eq("class_name", class_name).eq("role", "student").execute()
+        cn = class_name or (counselor.data or {}).get("class_name", "")
+        if cn:
+            students = supabase.select("profiles", "id").eq("class_name", cn).eq("role", "student").execute()
             student_ids = [s["id"] for s in (students.data or [])]
             if student_ids:
                 query = query.in_("student_id", student_ids)
             else:
-                return []  # 班级暂无学生
+                return []
+        else:
+            return []
+    elif role == "admin" and class_name:
+        students = supabase.select("profiles", "id").eq("class_name", class_name).eq("role", "student").execute()
+        student_ids = [s["id"] for s in (students.data or [])]
+        if student_ids:
+            query = query.in_("student_id", student_ids)
         else:
             return []
 
+    if category:
+        query = query.eq("category", category)
     if status:
         query = query.eq("status", status)
 
@@ -93,9 +102,49 @@ def update_order(order_id: str, data: OrderUpdate):
 
 
 @router.delete("/{order_id}")
-def cancel_order(order_id: str):
+def cancel_order(order_id: str, hard: bool = Query(False)):
     supabase = get_supabase()
-    supabase.update("repair_orders", {"status": "cancelled"}, {"id": f"eq.{order_id}"})
+    if hard:
+        # 硬删除：先清关联消息和日志，再删工单
+        supabase.delete("repair_messages", {"order_id": f"eq.{order_id}"})
+        supabase.delete("status_logs", {"order_id": f"eq.{order_id}"})
+        supabase.delete("repair_orders", {"id": f"eq.{order_id}"})
+    else:
+        supabase.update("repair_orders", {"status": "cancelled"}, {"id": f"eq.{order_id}"})
+    return {"ok": True}
+
+
+@router.post("/batch")
+def batch_update_orders(data: BatchUpdate):
+    supabase = get_supabase()
+    updates = {k: v for k, v in data.updates.items() if v is not None}
+    for oid in data.order_ids:
+        supabase.update("repair_orders", updates, {"id": f"eq.{oid}"})
+    return {"ok": True, "count": len(data.order_ids)}
+
+
+# 自定义类别（内存存储，重启后恢复为内置类别）
+_CUSTOM_CATEGORIES = []
+
+
+@router.get("/categories")
+def list_categories():
+    base = ["电路/灯具", "供水/管道", "家具/门窗", "空调/电器", "网络/弱电", "墙面/渗水", "锁具/五金", "卫生/下水", "其它"]
+    return {"categories": base + _CUSTOM_CATEGORIES}
+
+
+@router.post("/categories")
+def add_category(data: dict):
+    name = data.get("name", "").strip()
+    if name and name not in _CUSTOM_CATEGORIES:
+        _CUSTOM_CATEGORIES.append(name)
+    return {"ok": True}
+
+
+@router.delete("/categories/{name}")
+def remove_category(name: str):
+    global _CUSTOM_CATEGORIES
+    _CUSTOM_CATEGORIES = [c for c in _CUSTOM_CATEGORIES if c != name]
     return {"ok": True}
 
 

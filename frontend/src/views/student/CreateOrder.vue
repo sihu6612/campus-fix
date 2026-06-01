@@ -61,13 +61,8 @@ const store = useOrdersStore()
 const submitting = ref(false)
 const analyzing = ref(false)
 
-const catOpts = [
-  { label: '电路/灯具', value: '电路/灯具' }, { label: '供水/管道', value: '供水/管道' },
-  { label: '家具/门窗', value: '家具/门窗' }, { label: '空调/电器', value: '空调/电器' },
-  { label: '网络/弱电', value: '网络/弱电' }, { label: '墙面/渗水', value: '墙面/渗水' },
-  { label: '锁具/五金', value: '锁具/五金' }, { label: '卫生/下水', value: '卫生/下水' },
-  { label: '其它', value: '其它' },
-]
+import { CATEGORIES } from '../../composables/useCategories.js'
+const catOpts = CATEGORIES.map(c => ({ label: c, value: c }))
 
 const cpxMap = { simple: '简单', medium: '中等', complex: '复杂' }
 

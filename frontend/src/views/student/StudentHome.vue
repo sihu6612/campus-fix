@@ -14,6 +14,13 @@
       <n-button size="small" type="warning" :loading="savingClass" @click="saveClassName">保存</n-button>
     </div>
 
+    <div class="category-tags">
+      <n-tag v-for="cat in allCategories" :key="cat" :type="selectedCategory === cat ? 'primary' : 'default'"
+        :checked="selectedCategory === cat" size="small" class="cat-tag" @click="onCategoryClick(cat)">
+        {{ cat === '全部' ? '全部' : getCategoryIcon(cat) + ' ' + cat }}
+      </n-tag>
+    </div>
+
     <n-tabs v-model:value="tab" type="line" @update:value="onTabChange">
       <n-tab-pane name="all" tab="全部" />
       <n-tab-pane name="pending" tab="待分配" />
@@ -82,6 +89,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import { supabase } from '../../composables/useSupabase.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
 import { agentPanelOpen } from '../../composables/useAgent.js'
+import { CATEGORIES, getCategoryIcon } from '../../composables/useCategories.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()
@@ -94,6 +102,8 @@ const loading = ref(true)
 const refreshing = ref(false)
 const pulling = ref(0)
 const pageRef = ref(null)
+const selectedCategory = ref('')
+const allCategories = computed(() => ['全部', ...CATEGORIES])
 
 // 班级补填
 const classInput = ref('')
@@ -114,16 +124,12 @@ async function saveClassName() {
   savingClass.value = false
 }
 
-const catIconMap = {
-  '电路/灯具': '💡', '供水/管道': '🚿', '家具/门窗': '🪟', '空调/电器': '❄️',
-  '网络/弱电': '📶', '墙面/渗水': '🧱', '锁具/五金': '🔑', '卫生/下水': '🚽',
-}
-function catIcon(cat) { return catIconMap[cat] || '🔧' }
+function catIcon(cat) { return getCategoryIcon(cat) }
 
 async function loadOrders(status) {
   loading.value = true
   try {
-    await store.fetchOrders(status || undefined)
+    await store.fetchOrders(status || undefined, selectedCategory.value || undefined)
     orders.value = store.orders
   } finally {
     loading.value = false
@@ -131,6 +137,10 @@ async function loadOrders(status) {
   }
 }
 
+function onCategoryClick(cat) {
+  selectedCategory.value = cat === '全部' ? '' : cat
+  loadOrders(tab.value === 'all' ? null : tab.value)
+}
 function onTabChange(val) {
   loadOrders(val === 'all' ? null : val)
 }
@@ -213,6 +223,18 @@ onMounted(() => {
   flex: 1 1 auto;
   min-width: 180px;
 }
+.category-tags {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: wrap;
+}
+.category-tags::-webkit-scrollbar { display: none; }
+.cat-tag { cursor: pointer; flex-shrink: 0; }
+
 .class-input {
   width: 160px;
   flex-shrink: 0;

@@ -49,6 +49,12 @@ class OrderUpdate(BaseModel):
     location: Optional[str] = None
     description: Optional[str] = None
     complexity: Optional[str] = None
+    urgency: Optional[str] = None
+
+
+class BatchUpdate(BaseModel):
+    order_ids: List[str]
+    updates: dict
 
 
 class OrderResponse(BaseModel):

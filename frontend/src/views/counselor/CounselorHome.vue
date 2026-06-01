@@ -6,6 +6,17 @@
       <n-grid-item><n-card size="small" class="stat-card"><div class="stat-num">{{ stats.completed }}</div><div class="stat-label">已完成</div></n-card></n-grid-item>
     </n-grid>
 
+    <div class="filter-row">
+      <n-select v-if="classOptions.length" v-model:value="selectedClass" :options="classOptions"
+        size="small" style="width:160px" @update:value="onClassChange" />
+    </div>
+    <div class="category-tags">
+      <n-tag v-for="cat in allCategories" :key="cat" :type="selectedCategory === cat ? 'primary' : 'default'"
+        :checked="selectedCategory === cat" size="small" class="cat-tag" @click="onCategoryClick(cat)">
+        {{ cat === '全部' ? '全部' : getCategoryIcon(cat) + ' ' + cat }}
+      </n-tag>
+    </div>
+
     <n-tabs v-model:value="tab" type="line" @update:value="onTabChange">
       <n-tab-pane name="all" tab="全部" />
       <n-tab-pane name="pending" tab="待分配" />
@@ -30,12 +41,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../../composables/useSupabase.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useOrdersStore } from '../../stores/orders.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
+import { CATEGORIES, getCategoryIcon } from '../../composables/useCategories.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()
@@ -45,19 +57,26 @@ const tab = ref('all')
 const orders = ref([])
 const stats = ref({ pending: 0, in_progress: 0, awaiting_confirmation: 0, completed: 0 })
 const className = ref('')
+const selectedCategory = ref('')
+const selectedClass = ref('')
+const classOptions = ref([])
+const allCategories = computed(() => ['全部', ...CATEGORIES])
 
 async function load(status) {
-  await store.fetchOrders(status || null)
+  await store.fetchOrders(status || null, selectedCategory.value || undefined, selectedClass.value || undefined)
   orders.value = store.orders
-  updateStats()
 }
 
 async function updateStats() {
   const { data: profile } = await supabase.from('profiles').select('class_name').eq('id', auth.userId).single()
   if (!profile?.class_name) return
   className.value = profile.class_name
+  if (!classOptions.value.length) {
+    classOptions.value = [{ label: profile.class_name, value: profile.class_name }]
+    selectedClass.value = profile.class_name
+  }
 
-  const { data: students } = await supabase.from('profiles').select('id').eq('class_name', profile.class_name).eq('role', 'student')
+  const { data: students } = await supabase.from('profiles').select('id').eq('class_name', selectedClass.value || profile.class_name).eq('role', 'student')
   if (!students?.length) return
   const ids = students.map(s => s.id)
 
@@ -72,6 +91,15 @@ async function updateStats() {
   }
 }
 
+function onCategoryClick(cat) {
+  selectedCategory.value = cat === '全部' ? '' : cat
+  load(tab.value === 'all' ? null : tab.value)
+}
+function onClassChange(val) {
+  selectedClass.value = val
+  load(tab.value === 'all' ? null : tab.value)
+  updateStats()
+}
 function onTabChange(val) { load(val === 'all' ? null : val) }
 function goOrder(id) { router.push(`/counselor/order/${id}`) }
 function fmtTime(t) { return t ? new Date(t).toLocaleDateString('zh-CN') : '' }
@@ -80,12 +108,27 @@ onMounted(() => {
   load()
   subscribeOrders(() => load(tab.value === 'all' ? null : tab.value))
 })
+
 </script>
 
 <style scoped>
 .page-content {
   padding: 0 16px 32px;
 }
+.filter-row {
+  margin-top: 4px;
+}
+.category-tags {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: wrap;
+}
+.category-tags::-webkit-scrollbar { display: none; }
+.cat-tag { cursor: pointer; flex-shrink: 0; }
 .stats-grid { margin-bottom: 16px; }
 .stat-card { text-align: center; border-radius: 12px; }
 .stat-num { font-size: 28px; font-weight: 700; color: #4f46e5; }

@@ -10,10 +10,12 @@ export const useOrdersStore = defineStore('orders', {
     logs: [],
   }),
   actions: {
-    async fetchOrders(status) {
+    async fetchOrders(status, category, className) {
       const auth = useAuthStore()
       const params = new URLSearchParams({ user_id: auth.userId, role: auth.role })
       if (status) params.set('status', status)
+      if (category) params.set('category', category)
+      if (className) params.set('class_name', className)
       this.orders = await api(`/api/orders/?${params}`)
     },
     async fetchOrder(id) {
@@ -38,6 +40,20 @@ export const useOrdersStore = defineStore('orders', {
     },
     async cancelOrder(id) {
       await api(`/api/orders/${id}`, { method: 'DELETE' })
+    },
+    async hardDeleteOrder(id) {
+      await api(`/api/orders/${id}?hard=true`, { method: 'DELETE' })
+    },
+    async batchUpdateOrders(orderIds, updates) {
+      return await api('/api/orders/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_ids: orderIds, updates }),
+      })
+    },
+    async fetchCategories() {
+      const res = await api('/api/orders/categories')
+      return res.categories
     },
     async fetchMessages(orderId) {
       this.messages = await api(`/api/messages/${orderId}`)

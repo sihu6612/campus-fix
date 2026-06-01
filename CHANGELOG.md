@@ -2,6 +2,14 @@
 
 ## 2026-06-01
 
+### feat: 全端标签筛选 + 管理员工单管理增强
+- 提取共享类别常量 useCategories.js，9 个内置类别 + emoji 图标
+- 学生/师傅/辅导员/管理员四端新增类别标签栏，与状态 tab 联动复合筛选
+- 辅导员端新增班级下拉筛选器
+- 后端新增 category、class_name 查询参数，hard delete、batch update、categories CRUD
+- Store 扩展 fetchOrders 多参数、hardDeleteOrder、batchUpdateOrders、fetchCategories
+- 管理员面板：编辑工单弹窗、硬删除、批量分配/关闭、类别管理 tab、表格多选
+
 ### fix: 添加 n-dialog-provider 修复白屏
 - App.vue 缺 n-dialog-provider 导致 useDialog 上下文缺失，管理员面板白屏
 

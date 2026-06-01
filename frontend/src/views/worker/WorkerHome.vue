@@ -1,5 +1,12 @@
 <template>
   <div class="page-content">
+    <div class="category-tags">
+      <n-tag v-for="cat in allCategories" :key="cat" :type="selectedCategory === cat ? 'primary' : 'default'"
+        :checked="selectedCategory === cat" size="small" class="cat-tag" @click="onCategoryClick(cat)">
+        {{ cat === '全部' ? '全部' : getCategoryIcon(cat) + ' ' + cat }}
+      </n-tag>
+    </div>
+
     <n-tabs v-model:value="tab" type="line" @update:value="onTabChange">
       <n-tab-pane name="all" tab="全部" />
       <n-tab-pane name="assigned" tab="待接单" />
@@ -24,22 +31,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useOrdersStore } from '../../stores/orders.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
+import { CATEGORIES, getCategoryIcon } from '../../composables/useCategories.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()
 const store = useOrdersStore()
 const tab = ref('all')
 const orders = ref([])
+const selectedCategory = ref('')
+const allCategories = computed(() => ['全部', ...CATEGORIES])
 
 async function load(status) {
-  await store.fetchOrders(status || null)
+  await store.fetchOrders(status || null, selectedCategory.value || undefined)
   orders.value = store.orders
 }
 
+function onCategoryClick(cat) {
+  selectedCategory.value = cat === '全部' ? '' : cat
+  load(tab.value === 'all' ? null : tab.value)
+}
 function onTabChange(val) { load(val === 'all' ? null : val) }
 function goOrder(id) { router.push(`/worker/order/${id}`) }
 function fmtTime(t) { return t ? new Date(t).toLocaleDateString('zh-CN') : '' }
@@ -54,6 +68,17 @@ onMounted(() => {
 .page-content {
   padding: 0 16px 32px;
 }
+.category-tags {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: wrap;
+}
+.category-tags::-webkit-scrollbar { display: none; }
+.cat-tag { cursor: pointer; flex-shrink: 0; }
 .order-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
 .order-card { border-radius: 12px; }
 .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }

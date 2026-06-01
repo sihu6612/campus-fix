@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <div class="login-card">
-      <div class="logo">
+      <div class="logo" @click="onLogoClick">
         <n-icon size="48" color="#4f46e5"><BuildOutline /></n-icon>
         <h1>校修通</h1>
         <p>CampusFix</p>
@@ -18,7 +18,7 @@
         <n-button type="primary" block size="large" :loading="loading" @click="handleLogin">{{ loading ? '登录中...' : '登录' }}</n-button>
       </n-form>
 
-      <n-form v-else @submit.prevent="handleRegister">
+      <n-form v-else-if="!showAdminReg" @submit.prevent="handleRegister">
         <n-form-item><n-input v-model:value="email" placeholder="邮箱" clearable size="large" /></n-form-item>
         <n-form-item><n-input v-model:value="displayName" placeholder="你的名字" clearable size="large" /></n-form-item>
         <n-form-item>
@@ -30,6 +30,18 @@
         <n-form-item><n-input v-model:value="password" type="password" placeholder="密码（至少6位）" show-password-on="click" size="large" /></n-form-item>
         <n-button type="primary" block size="large" :loading="loading" @click="handleRegister">{{ loading ? '注册中...' : '注册' }}</n-button>
       </n-form>
+
+      <!-- 隐藏管理员注册 -->
+      <div v-else class="admin-reg-form">
+        <div class="admin-hint">🔐 管理员注册</div>
+        <n-form>
+          <n-form-item><n-input v-model:value="adminEmail" placeholder="邮箱" clearable size="large" /></n-form-item>
+          <n-form-item><n-input v-model:value="adminName" placeholder="管理员名称" clearable size="large" /></n-form-item>
+          <n-form-item><n-input v-model:value="adminPassword" type="password" placeholder="密码（至少6位）" show-password-on="click" size="large" /></n-form-item>
+          <n-button type="warning" block size="large" :loading="loading" @click="handleAdminRegister">注册管理员</n-button>
+        </n-form>
+        <n-button text size="small" style="margin-top:8px" @click="showAdminReg=false">返回普通注册</n-button>
+      </div>
     </div>
   </div>
 </template>
@@ -52,6 +64,41 @@ const displayName = ref('')
 const regRole = ref('student')
 const className = ref('')
 const loading = ref(false)
+
+// 隐藏管理员入口：连点标题5次
+const clickCount = ref(0)
+const showAdminReg = ref(false)
+const adminEmail = ref('')
+const adminName = ref('')
+const adminPassword = ref('')
+let clickTimer = null
+
+function onLogoClick() {
+  clickCount.value++
+  clearTimeout(clickTimer)
+  if (clickCount.value >= 5) {
+    clickCount.value = 0
+    showAdminReg.value = true
+    tab.value = 'register'
+  }
+  clickTimer = setTimeout(() => { clickCount.value = 0 }, 2000)
+}
+
+async function handleAdminRegister() {
+  if (adminPassword.value.length < 6) {
+    message.warning('密码至少6位')
+    return
+  }
+  loading.value = true
+  try {
+    await auth.adminRegister(adminEmail.value, adminPassword.value, adminName.value)
+    message.success('管理员注册成功！')
+    showAdminReg.value = false
+  } catch (e) {
+    message.error(e.message || '注册失败')
+  }
+  loading.value = false
+}
 
 const roleOptions = [
   { label: '学生', value: 'student' },

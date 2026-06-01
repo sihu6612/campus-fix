@@ -33,6 +33,18 @@ export const useAuthStore = defineStore('auth', {
       if (error) throw error
       return data
     },
+    async adminRegister(email, password, displayName) {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/auth/admin/register?secret=xiaoling2026`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, display_name: displayName, role: 'admin', class_name: '' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: '注册失败' }))
+        throw new Error(err.detail || '注册失败')
+      }
+      return res.json()
+    },
     async logout() {
       await supabase.auth.signOut()
       this.user = null

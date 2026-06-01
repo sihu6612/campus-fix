@@ -11,11 +11,12 @@
       <n-tab-pane name="pending" tab="待分配" />
       <n-tab-pane name="in_progress" tab="维修中" />
       <n-tab-pane name="completed" tab="已完成" />
+      <n-tab-pane name="users" tab="用户管理" />
     </n-tabs>
 
     <!-- 桌面端使用表格 -->
     <n-data-table
-      v-if="orders.length"
+      v-if="orders.length && tab !== 'users'"
       :columns="tableColumns"
       :data="orders"
       :row-key="r => r.id"
@@ -24,7 +25,7 @@
     />
 
     <!-- 移动端使用卡片 -->
-    <div v-if="orders.length" class="order-list">
+    <div v-if="orders.length && tab !== 'users'" class="order-list">
       <n-card v-for="o in orders" :key="o.id" size="small" class="order-card" hoverable @click="goOrder(o.id)">
         <div class="card-row">
           <StatusBadge :status="o.status" />
@@ -38,7 +39,19 @@
         </div>
       </n-card>
     </div>
-    <n-empty v-else description="暂无工单" style="margin-top:80px" />
+    <n-empty v-else-if="tab !== 'users'" description="暂无工单" style="margin-top:80px" />
+
+    <!-- 用户管理 -->
+    <div v-if="tab === 'users'" class="user-panel" style="margin-top:12px">
+      <n-data-table
+        v-if="users.length"
+        :columns="userColumns"
+        :data="users"
+        :row-key="r => r.id"
+        :row-props="() => ({ style: 'cursor:default' })"
+      />
+      <n-empty v-else description="加载中..." style="margin-top:40px" />
+    </div>
 
     <n-modal v-model:show="assignModal" preset="card" title="分配师傅">
       <n-form-item label="师傅">
@@ -52,16 +65,19 @@
 <script setup>
 import { ref, onMounted, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
-import { useMessage, NTag, NButton } from 'naive-ui'
+import { useMessage, useDialog, NTag, NButton } from 'naive-ui'
 import { supabase } from '../../composables/useSupabase.js'
 import { useOrdersStore } from '../../stores/orders.js'
+import { useAuthStore } from '../../stores/auth.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 import { useScreen } from '../../composables/useScreen.js'
 
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const store = useOrdersStore()
+const auth = useAuthStore()
 const { isMobile } = useScreen()
 const tab = ref('all')
 const orders = ref([])
@@ -71,6 +87,9 @@ const assignOrderId = ref(null)
 const assignWorkerId = ref(null)
 const assigning = ref(false)
 const stats = ref({ pending: 0, in_progress: 0, completed: 0 })
+const users = ref([])
+
+const roleLabel = { student: '学生', worker: '维修师傅', admin: '管理员', counselor: '辅导员' }
 
 const workerOpts = ref([])
 
@@ -89,6 +108,15 @@ const tableColumns = computed(() => [
   { title: '师傅', key: 'worker_name', width: 100, render: (row) => row.worker_name || '-' },
   { title: '时间', key: 'created_at', width: 110, render: (row) => fmtTime(row.created_at) },
   { title: '操作', key: 'actions', width: 100, render: (row) => row.status === 'pending' ? h(NButton, { size: 'tiny', type: 'primary', onClick: (e) => { e.stopPropagation(); showAssign(row) } }, () => '分配') : null },
+])
+
+const userColumns = computed(() => [
+  { title: '名称', key: 'display_name', width: 120 },
+  { title: '角色', key: 'role', width: 100, render: (row) => roleLabel[row.role] || row.role },
+  { title: '班级', key: 'class_name', width: 140, render: (row) => row.class_name || '-' },
+  { title: '手机', key: 'phone', width: 120, render: (row) => row.phone || '-' },
+  { title: '注册时间', key: 'created_at', width: 110, render: (row) => fmtTime(row.created_at) },
+  { title: '操作', key: 'actions', width: 80, render: (row) => h(NButton, { size: 'tiny', type: 'error', onClick: () => deleteUser(row) }, () => '删除') },
 ])
 
 async function load(status) {
@@ -112,9 +140,37 @@ async function loadWorkers() {
   }
 }
 
-function onTabChange(val) { load(val === 'all' ? null : val) }
+function onTabChange(val) {
+  if (val === 'users') { loadUsers(); return }
+  load(val === 'all' ? null : val)
+}
 function goOrder(id) { router.push(`/admin/order/${id}`) }
 function fmtTime(t) { return t ? new Date(t).toLocaleDateString('zh-CN') : '' }
+
+async function loadUsers() {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/auth/admin/users?admin_id=${auth.userId}`)
+    if (!res.ok) throw new Error('加载失败')
+    users.value = await res.json()
+  } catch (e) { message.error(e.message) }
+}
+
+async function deleteUser(row) {
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除用户「${row.display_name}」吗？此操作不可撤销。`,
+    positiveText: '确认删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/auth/admin/users/${row.id}?admin_id=${auth.userId}`, { method: 'DELETE' })
+        if (!res.ok) throw new Error('删除失败')
+        message.success('已删除')
+        loadUsers()
+      } catch (e) { message.error(e.message) }
+    },
+  })
+}
 
 function showAssign(order) {
   assignOrderId.value = order.id

@@ -27,7 +27,19 @@ class SupabaseAPI:
         return r.json()
 
     def auth_delete_user(self, user_id: str, access_token: str):
-        """用 service_role 删除用户（会级联删除 profiles 和相关数据）"""
+        """用 access_token 删除自身账号"""
+        headers = {
+            "apikey": self.key,
+            "Authorization": f"Bearer {self.key}",
+        }
+        r = httpx.delete(
+            f"{self.url}/auth/v1/admin/users/{user_id}",
+            headers=headers,
+        )
+        r.raise_for_status()
+
+    def auth_delete_user_admin(self, user_id: str):
+        """管理员用 service_role 删除任意用户"""
         headers = {
             "apikey": self.key,
             "Authorization": f"Bearer {self.key}",

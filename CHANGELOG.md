@@ -2,6 +2,12 @@
 
 ## 2026-06-01
 
+### feat: 管理员隐藏入口 + 用户管理
+- 登录页连点标题 5 次出现隐藏管理员注册入口，密钥保护
+- 后端新增 `POST /api/auth/admin/register`、`GET /api/auth/admin/users`、`DELETE /api/auth/admin/users/{id}`
+- 管理员面板新增「用户管理」tab，支持查看所有用户及删除操作
+- 前端注册页/登录页/管理面板联动完成
+
 ### feat: 维修知识库 (1ebd905)
 - 新增 `solution` 字段到工单表，师傅完工时填写维修方案
 - 新增 `/api/knowledge/search` 知识库搜索接口

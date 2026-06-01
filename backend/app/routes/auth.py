@@ -27,3 +27,14 @@ def login(data: UserLogin):
         return {"user": resp.get("user"), "session": resp.get("session")}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/account")
+def delete_account(user_id: str, access_token: str):
+    """删除账号（需提供 user_id 和 access_token 验证身份）"""
+    supabase = get_supabase()
+    try:
+        supabase.auth_delete_user(user_id, access_token)
+        return {"ok": True, "message": "账号已删除"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -26,6 +26,18 @@ class SupabaseAPI:
         r.raise_for_status()
         return r.json()
 
+    def auth_delete_user(self, user_id: str, access_token: str):
+        """用 service_role 删除用户（会级联删除 profiles 和相关数据）"""
+        headers = {
+            "apikey": self.key,
+            "Authorization": f"Bearer {self.key}",
+        }
+        r = httpx.delete(
+            f"{self.url}/auth/v1/admin/users/{user_id}",
+            headers=headers,
+        )
+        r.raise_for_status()
+
     # --- Table CRUD (PostgREST) ---
     def select(self, table: str, columns: str = "*"):
         return SupabaseQuery(self, table, columns)

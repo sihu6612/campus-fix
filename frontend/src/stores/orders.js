@@ -68,5 +68,13 @@ export const useOrdersStore = defineStore('orders', {
       if (!res.ok) throw new Error('分析失败')
       return await res.json()
     },
+    async analyzeImageFast(base64) {
+      const res = await api('/api/upload/analyze/fast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_base64: base64 }),
+      })
+      return res
+    },
   },
 })

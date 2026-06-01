@@ -45,12 +45,36 @@ const complexityLabel = {
   simple: '简单', medium: '中等', complex: '复杂',
 }
 
+function compressImage(file) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const maxW = 512
+      const scale = Math.min(1, maxW / img.width)
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob((blob) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.readAsDataURL(blob)
+      }, 'image/jpeg', 0.7)
+    }
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 async function handleChange({ file }) {
   if (!file.file) return
   try {
     if (props.autoAnalyze) {
       analyzing.value = true
-      const res = await store.analyzeImage(file.file)
+      const base64 = await compressImage(file.file)
+      const res = await store.analyzeImageFast(base64)
       imageUrl.value = res.url
       analysis.value = res.analysis
       emit('uploaded', res.url)

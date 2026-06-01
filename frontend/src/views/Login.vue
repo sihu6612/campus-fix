@@ -24,7 +24,7 @@
         <n-form-item>
           <n-select v-model:value="regRole" placeholder="选择角色" :options="roleOptions" size="large" />
         </n-form-item>
-        <n-form-item v-if="regRole === 'counselor'">
+        <n-form-item v-if="regRole === 'student' || regRole === 'counselor'">
           <n-input v-model:value="className" placeholder="班级（如：软件工程2101）" clearable size="large" />
         </n-form-item>
         <n-form-item><n-input v-model:value="password" type="password" placeholder="密码（至少6位）" show-password-on="click" size="large" /></n-form-item>
@@ -79,8 +79,8 @@ async function handleRegister() {
     message.warning('密码至少6位')
     return
   }
-  if (regRole.value === 'counselor' && !className.value.trim()) {
-    message.warning('辅导员请填写班级')
+  if ((regRole.value === 'student' || regRole.value === 'counselor') && !className.value.trim()) {
+    message.warning('请填写班级')
     return
   }
   loading.value = true

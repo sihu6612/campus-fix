@@ -6,6 +6,14 @@
       <span>{{ refreshing ? '刷新中...' : pulling > 60 ? '松开刷新' : '下拉刷新' }}</span>
     </div>
 
+    <!-- 补填班级提示（存量学生 class_name 为空时显示） -->
+    <div v-if="showClassPrompt" class="class-prompt">
+      <n-icon size="18" color="#f0a020"><WarningOutline /></n-icon>
+      <span>请完善你的班级信息，以便辅导员查看你的工单</span>
+      <n-input v-model:value="classInput" placeholder="如：软件工程2101" size="small" class="class-input" />
+      <n-button size="small" type="warning" :loading="savingClass" @click="saveClassName">保存</n-button>
+    </div>
+
     <n-tabs v-model:value="tab" type="line" @update:value="onTabChange">
       <n-tab-pane name="all" tab="全部" />
       <n-tab-pane name="pending" tab="待分配" />
@@ -65,15 +73,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { AddOutline, ListOutline, AddCircleOutline, RefreshOutline, FileTrayOutline, LocationOutline } from '@vicons/ionicons5'
+import { useMessage } from 'naive-ui'
+import { AddOutline, ListOutline, AddCircleOutline, RefreshOutline, FileTrayOutline, LocationOutline, WarningOutline } from '@vicons/ionicons5'
 import { useOrdersStore } from '../../stores/orders.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { supabase } from '../../composables/useSupabase.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
 import { agentPanelOpen } from '../../composables/useAgent.js'
 import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()
+const message = useMessage()
+const auth = useAuthStore()
 const store = useOrdersStore()
 const tab = ref('all')
 const orders = ref([])
@@ -81,6 +94,25 @@ const loading = ref(true)
 const refreshing = ref(false)
 const pulling = ref(0)
 const pageRef = ref(null)
+
+// 班级补填
+const classInput = ref('')
+const savingClass = ref(false)
+const showClassPrompt = computed(() => auth.role === 'student' && !auth.user?.class_name)
+
+async function saveClassName() {
+  if (!classInput.value.trim()) return
+  savingClass.value = true
+  try {
+    await supabase.from('profiles').update({ class_name: classInput.value.trim() }).eq('id', auth.userId)
+    auth.user.class_name = classInput.value.trim()
+    localStorage.setItem('cf_user', JSON.stringify(auth.user))
+    message.success('班级已保存')
+  } catch (e) {
+    message.error('保存失败')
+  }
+  savingClass.value = false
+}
 
 const catIconMap = {
   '电路/灯具': '💡', '供水/管道': '🚿', '家具/门窗': '🪟', '空调/电器': '❄️',
@@ -162,6 +194,29 @@ onMounted(() => {
 .pull-indicator.active { color: #4f46e5; }
 .spinning { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* 班级补填提示 */
+.class-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: #fff8e6;
+  border: 1px solid #ffe4a0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #8a6d14;
+  flex-wrap: wrap;
+}
+.class-prompt span {
+  flex: 1 1 auto;
+  min-width: 180px;
+}
+.class-input {
+  width: 160px;
+  flex-shrink: 0;
+}
 
 .order-list {
   display: flex;

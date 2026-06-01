@@ -2,8 +2,17 @@ from fastapi import APIRouter, HTTPException, Query
 from app.services.supabase import get_supabase
 from app.models.schemas import OrderCreate, OrderUpdate
 from typing import Optional
+import re
 
 router = APIRouter()
+
+UUID_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+
+
+def _validate_uuid(value: str, name: str = "id"):
+    if not UUID_RE.match(value):
+        raise HTTPException(status_code=400, detail=f"无效的 {name} 格式")
+
 
 
 @router.get("/")
@@ -12,6 +21,7 @@ def list_orders(
     role: str = Query(...),
     status: Optional[str] = None,
 ):
+    _validate_uuid(user_id, "user_id")
     supabase = get_supabase()
     query = supabase.select("repair_orders", "*")
 
@@ -44,6 +54,7 @@ def list_orders(
 
 @router.get("/{order_id}")
 def get_order(order_id: str):
+    _validate_uuid(order_id, "order_id")
     supabase = get_supabase()
     result = supabase.select("repair_orders", "*").eq("id", order_id).single().execute()
     if not result.data:
@@ -66,7 +77,9 @@ def create_order(data: OrderCreate, student_id: str = Query(...)):
         "complexity": data.complexity,
     }
     result = supabase.insert("repair_orders", order)
-    return result[0] if result else {}
+    if not result:
+        raise HTTPException(status_code=500, detail="工单创建失败，请重试")
+    return result[0]
 
 
 @router.patch("/{order_id}")
@@ -74,7 +87,9 @@ def update_order(order_id: str, data: OrderUpdate):
     supabase = get_supabase()
     updates = {k: v for k, v in data.model_dump(mode="json").items() if v is not None}
     result = supabase.update("repair_orders", updates, {"id": f"eq.{order_id}"})
-    return result[0] if result else {}
+    if not result:
+        raise HTTPException(status_code=500, detail="工单更新失败，请重试")
+    return result[0]
 
 
 @router.delete("/{order_id}")

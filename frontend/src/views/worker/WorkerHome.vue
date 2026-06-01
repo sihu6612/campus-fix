@@ -1,8 +1,10 @@
 <template>
   <div class="page-content">
     <n-tabs v-model:value="tab" type="line" @update:value="onTabChange">
+      <n-tab-pane name="all" tab="全部" />
       <n-tab-pane name="assigned" tab="待接单" />
       <n-tab-pane name="in_progress" tab="进行中" />
+      <n-tab-pane name="awaiting_confirmation" tab="待确认" />
       <n-tab-pane name="completed" tab="已完成" />
     </n-tabs>
 
@@ -30,21 +32,21 @@ import StatusBadge from '../../components/StatusBadge.vue'
 
 const router = useRouter()
 const store = useOrdersStore()
-const tab = ref('assigned')
+const tab = ref('all')
 const orders = ref([])
 
 async function load(status) {
-  await store.fetchOrders(status)
+  await store.fetchOrders(status || null)
   orders.value = store.orders
 }
 
-function onTabChange(val) { load(val) }
+function onTabChange(val) { load(val === 'all' ? null : val) }
 function goOrder(id) { router.push(`/worker/order/${id}`) }
 function fmtTime(t) { return t ? new Date(t).toLocaleDateString('zh-CN') : '' }
 
 onMounted(() => {
-  load('assigned')
-  subscribeOrders(() => load(tab.value))
+  load()
+  subscribeOrders(() => load(tab.value === 'all' ? null : tab.value))
 })
 </script>
 

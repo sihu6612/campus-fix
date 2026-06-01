@@ -2,6 +2,16 @@
 
 ## 2026-06-01
 
+### feat: AI 智能升级 — 紧急度评分 + 自动匹配师傅 + 高德路径规划
+- Vision prompt 新增 urgency_score (0-100)，四端列表按紧急度降序排列
+- 新建工人匹配评分算法：技能(+30) + 负载(-15) + 距离(+10) + 紧急度(+5)
+- 管理员分配弹窗新增「智能推荐」按钮，展示 Top3 师傅及评分明细
+- 新建高德地图集成：地理编码 + 驾车路径规划 + 途经点排序
+- 师傅端新增「规划路线」按钮 → RouteMap 全屏地图页
+- 后端新增 /api/workers/、/api/workers/suggest、/api/workers/{id}/route、/api/orders/{id}/geocode
+- 前端 StatusBadge 新增紧急度彩色标签（红/橙/灰）
+- CreateOrder 自动传入 urgency_score
+
 ### feat: 全端标签筛选 + 管理员工单管理增强
 - 提取共享类别常量 useCategories.js，9 个内置类别 + emoji 图标
 - 学生/师傅/辅导员/管理员四端新增类别标签栏，与状态 tab 联动复合筛选

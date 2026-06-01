@@ -18,25 +18,31 @@ CATEGORY_PROMPT = """你是一个校园维修助手。根据图片判断维修�
 - simple: 单人15分钟内能解决（换灯管、拧螺丝、通下水）
 - medium: 需要携带配件、30分钟以上（换水龙头、修门锁）
 - complex: 需要大型工具或多人协作（墙面渗水、空调加氟、线路改造）
-- urgent: 影响安全或大面积停用（漏电、爆水管、整层断电）
+
+## 紧急度评分 urgency_score（0-100 整数）
+- 90-100：涉及人身安全（漏电、漏气、爆水管、大面积积水触电风险）
+- 70-89：大面积设施停用影响多人（整层断电、整栋停水、空调全坏）
+- 40-69：影响正常使用但不紧急（单个灯不亮、水龙头滴水、门锁卡顿）
+- 0-39：小问题可延后处理（墙面污渍、螺丝松动、外观瑕疵）
+注意：即便问题本身不严重，如果描述中提到"急"、"马上"、"立刻"、"考试"、"上课"等关键词，也应适当提高 urgency_score。
 
 ## Few-shot 示例
 
 示例1：
 图片：一盏不亮的日光灯
-输出：{"category":"电路/灯具","worker_type":"电工","description":"日光灯管不亮，疑似灯管烧坏或镇流器故障","suggested_parts":["日光灯管","镇流器"],"complexity":"simple","urgency":"normal","confidence":0.9}
+输出：{"category":"电路/灯具","worker_type":"电工","description":"日光灯管不亮，疑似灯管烧坏或镇流器故障","suggested_parts":["日光灯管","镇流器"],"complexity":"simple","urgency":"normal","urgency_score":35,"confidence":0.9}
 
 示例2：
 图片：水龙头一直在滴水，下方有水渍
-输出：{"category":"供水/管道","worker_type":"水工","description":"水龙头关不紧持续滴水","suggested_parts":["水龙头密封圈","水龙头阀芯"],"complexity":"medium","urgency":"normal","confidence":0.85}
+输出：{"category":"供水/管道","worker_type":"水工","description":"水龙头关不紧持续滴水","suggested_parts":["水龙头密封圈","水龙头阀芯"],"complexity":"medium","urgency":"normal","urgency_score":45,"confidence":0.85}
 
 示例3：
 图片：墙面大面积渗水发霉脱皮
-输出：{"category":"墙面/渗水","worker_type":"泥水工","description":"墙面大面积渗水导致墙皮脱落发霉","suggested_parts":["防水涂料","腻子粉","墙面漆"],"complexity":"complex","urgency":"urgent","confidence":0.9}
+输出：{"category":"墙面/渗水","worker_type":"泥水工","description":"墙面大面积渗水导致墙皮脱落发霉","suggested_parts":["防水涂料","腻子粉","墙面漆"],"complexity":"complex","urgency":"urgent","urgency_score":72,"confidence":0.9}
 
 示例4：
 图片：马桶堵塞，水溢出地面
-输出：{"category":"卫生/下水","worker_type":"管道工","description":"马桶堵塞导致污水溢出","suggested_parts":["管道疏通剂","马桶搋子"],"complexity":"simple","urgency":"urgent","confidence":0.88}
+输出：{"category":"卫生/下水","worker_type":"管道工","description":"马桶堵塞导致污水溢出","suggested_parts":["管道疏通剂","马桶搋子"],"complexity":"simple","urgency":"urgent","urgency_score":88,"confidence":0.88}
 
 请严格按以下 JSON 格式返回，不要输出其他内容：
 {
@@ -46,6 +52,7 @@ CATEGORY_PROMPT = """你是一个校园维修助手。根据图片判断维修�
   "suggested_parts": ["配件1", "配件2"],
   "complexity": "simple|medium|complex",
   "urgency": "normal|urgent",
+  "urgency_score": 0-100整数,
   "confidence": 0.0-1.0
 }"""
 

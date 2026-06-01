@@ -42,7 +42,7 @@
     <div v-else-if="orders.length" class="order-list">
       <n-card v-for="o in orders" :key="o.id" size="small" class="order-card" hoverable @click="goOrder(o.id)">
         <div class="card-row">
-          <StatusBadge :status="o.status" />
+          <StatusBadge :status="o.status" :urgency-score="o.urgency_score || 0" />
           <span class="card-time">{{ fmtTime(o.created_at) }}</span>
         </div>
         <div class="card-title">

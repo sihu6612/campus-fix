@@ -48,7 +48,7 @@
     <div v-if="orders.length && tab !== 'users' && tab !== 'categories'" class="order-list">
       <n-card v-for="o in orders" :key="o.id" size="small" class="order-card" hoverable @click="goOrder(o.id)">
         <div class="card-row">
-          <StatusBadge :status="o.status" />
+          <StatusBadge :status="o.status" :urgency-score="o.urgency_score || 0" />
           <span class="card-time">{{ fmtTime(o.created_at) }}</span>
         </div>
         <div class="card-title">{{ o.category }} — {{ o.location }}</div>
@@ -89,7 +89,23 @@
       <n-empty v-else description="加载中..." style="margin-top:40px" />
     </div>
 
-    <n-modal v-model:show="assignModal" preset="card" title="分配师傅">
+    <n-modal v-model:show="assignModal" preset="card" title="分配师傅" style="max-width:500px">
+      <n-button dashed block size="small" :loading="suggesting" @click="getSuggestion" style="margin-bottom:12px">
+        <template #icon><n-icon size="16"><BulbOutline /></n-icon></template>
+        智能推荐
+      </n-button>
+      <div v-if="suggestions.length" class="suggest-list">
+        <div v-for="s in suggestions.slice(0, 3)" :key="s.worker_id"
+          class="suggest-item" :class="{ best: s === suggestions[0] }"
+          @click="assignWorkerId = s.worker_id">
+          <div class="suggest-name">
+            <n-tag :type="s === suggestions[0] ? 'success' : 'default'" size="tiny" round>{{ s === suggestions[0] ? '推荐' : '备选' }}</n-tag>
+            {{ s.worker_name }}
+            <span class="suggest-score">{{ s.score }}/{{ s.max_score }}分</span>
+          </div>
+          <div class="suggest-detail">{{ s.worker_type }} · 负载{{ s.current_load }}单 · {{ s.reasons?.join(' | ') }}</div>
+        </div>
+      </div>
       <n-form-item label="师傅">
         <n-select v-model:value="assignWorkerId" placeholder="选择师傅" :options="workerOpts" />
       </n-form-item>
@@ -106,8 +122,8 @@
       <n-form-item label="描述">
         <n-input v-model:value="editForm.description" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" />
       </n-form-item>
-      <n-form-item label="紧急程度">
-        <n-select v-model:value="editForm.urgency" :options="urgencyOptions" />
+      <n-form-item label="紧急度">
+        <n-slider v-model:value="editForm.urgency_score" :min="0" :max="100" :step="5" :marks="{ 0: '普通', 40: '中等', 80: '紧急', 100: '危急' }" />
       </n-form-item>
       <n-form-item label="状态">
         <n-select v-model:value="editForm.status" :options="statusOptions" />
@@ -121,8 +137,10 @@
 import { ref, onMounted, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage, useDialog, NTag, NButton, NCheckbox } from 'naive-ui'
+import { BulbOutline } from '@vicons/ionicons5'
 import { supabase } from '../../composables/useSupabase.js'
 import { useOrdersStore } from '../../stores/orders.js'
+import { useWorkersStore } from '../../stores/workers.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
 import { CATEGORIES, getCategoryIcon } from '../../composables/useCategories.js'
@@ -133,6 +151,7 @@ const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
 const store = useOrdersStore()
+const workersStore = useWorkersStore()
 const auth = useAuthStore()
 const { isMobile } = useScreen()
 const tab = ref('all')
@@ -142,6 +161,8 @@ const assignModal = ref(false)
 const assignOrderId = ref(null)
 const assignWorkerId = ref(null)
 const assigning = ref(false)
+const suggesting = ref(false)
+const suggestions = ref([])
 const stats = ref({ pending: 0, in_progress: 0, completed: 0 })
 const users = ref([])
 const selectedCategory = ref('')
@@ -153,7 +174,7 @@ const batchWorkerId = ref(null)
 
 // 编辑工单
 const editModal = ref(false)
-const editForm = ref({ id: '', category: '', location: '', description: '', urgency: 'normal', status: '' })
+const editForm = ref({ id: '', category: '', location: '', description: '', urgency_score: 0, status: '' })
 const saving = ref(false)
 
 // 类别管理
@@ -275,7 +296,7 @@ function showEdit(order) {
     category: order.category,
     location: order.location,
     description: order.description,
-    urgency: order.urgency || 'normal',
+    urgency_score: order.urgency_score || 0,
     status: order.status,
   }
   editModal.value = true
@@ -376,7 +397,20 @@ async function removeCategory(name) {
 function showAssign(order) {
   assignOrderId.value = order.id
   assignWorkerId.value = null
+  suggestions.value = []
   assignModal.value = true
+}
+
+async function getSuggestion() {
+  suggesting.value = true
+  try {
+    await workersStore.suggestWorker(assignOrderId.value)
+    suggestions.value = workersStore.suggestions
+    if (workersStore.best) {
+      assignWorkerId.value = workersStore.best.worker_id
+    }
+  } catch (e) { message.error(e.message || '推荐失败') }
+  suggesting.value = false
 }
 
 async function doAssign() {
@@ -436,6 +470,40 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.suggest-list {
+  margin-bottom: 12px;
+}
+.suggest-item {
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.suggest-item.best {
+  border-color: #4f46e5;
+  background: #f5f3ff;
+}
+.suggest-item:hover { border-color: #4f46e5; }
+.suggest-name {
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.suggest-score {
+  margin-left: auto;
+  color: #4f46e5;
+  font-size: 13px;
+}
+.suggest-detail {
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
 }
 
 .order-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }

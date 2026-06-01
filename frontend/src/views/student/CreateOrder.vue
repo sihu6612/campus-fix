@@ -68,7 +68,7 @@ const cpxMap = { simple: '简单', medium: '中等', complex: '复杂' }
 
 const form = ref({
   category: '', location: '', description: '', image_urls: [],
-  urgency: 'normal', ai_analysis: null, suggested_parts: [], complexity: 'simple',
+  urgency: 'normal', urgency_score: 0, ai_analysis: null, suggested_parts: [], complexity: 'simple',
 })
 
 const errors = reactive({ category: '', location: '', description: '' })
@@ -87,6 +87,7 @@ function onAnalyzed(analysis) {
   form.value.complexity = analysis.complexity || 'simple'
   form.value.suggested_parts = analysis.suggested_parts || []
   if (analysis.urgency === 'urgent') form.value.urgency = 'urgent'
+  form.value.urgency_score = analysis.urgency_score || 0
 }
 
 async function submit() {

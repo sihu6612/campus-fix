@@ -1,5 +1,11 @@
 <template>
   <div class="page-content">
+    <div class="route-btn-bar">
+      <n-button dashed size="small" @click="$router.push('/worker/route')">
+        <template #icon><n-icon size="16"><MapOutline /></n-icon></template>
+        规划路线
+      </n-button>
+    </div>
     <div class="category-tags">
       <n-tag v-for="cat in allCategories" :key="cat" :type="selectedCategory === cat ? 'primary' : 'default'"
         :checked="selectedCategory === cat" size="small" class="cat-tag" @click="onCategoryClick(cat)">
@@ -18,7 +24,7 @@
     <div v-if="orders.length" class="order-list">
       <n-card v-for="o in orders" :key="o.id" size="small" class="order-card" hoverable @click="goOrder(o.id)">
         <div class="card-row">
-          <StatusBadge :status="o.status" />
+          <StatusBadge :status="o.status" :urgency-score="o.urgency_score || 0" />
           <span class="card-time">{{ fmtTime(o.created_at) }}</span>
         </div>
         <div class="card-title">{{ o.category }} — {{ o.location }}</div>
@@ -37,6 +43,7 @@ import { useOrdersStore } from '../../stores/orders.js'
 import { subscribeOrders } from '../../composables/useRealtime.js'
 import { CATEGORIES, getCategoryIcon } from '../../composables/useCategories.js'
 import StatusBadge from '../../components/StatusBadge.vue'
+import { MapOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
 const store = useOrdersStore()
@@ -67,6 +74,11 @@ onMounted(() => {
 <style scoped>
 .page-content {
   padding: 0 16px 32px;
+}
+.route-btn-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
 }
 .category-tags {
   display: flex;

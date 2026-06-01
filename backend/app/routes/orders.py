@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.supabase import get_supabase
+from app.services.geocode import geocode
 from app.models.schemas import OrderCreate, OrderUpdate, BatchUpdate
 from typing import Optional
 import re
@@ -54,9 +55,11 @@ def list_orders(
     if category:
         query = query.eq("category", category)
     if status:
-        query = query.eq("status", status)
+        query = query.eq("status", status).order("urgency_score", ascending=False).order("created_at", ascending=False)
+    else:
+        query = query.order("urgency_score", ascending=False).order("created_at", ascending=False)
 
-    result = query.order("created_at", asc=False).execute()
+    result = query.execute()
     orders = result.data or []
     return _enrich_orders(orders, supabase)
 
@@ -81,6 +84,7 @@ def create_order(data: OrderCreate, student_id: str = Query(...)):
         "description": data.description,
         "image_urls": data.image_urls,
         "urgency": data.urgency,
+        "urgency_score": data.urgency_score,
         "ai_analysis": data.ai_analysis,
         "suggested_parts": data.suggested_parts,
         "complexity": data.complexity,
@@ -146,6 +150,23 @@ def remove_category(name: str):
     global _CUSTOM_CATEGORIES
     _CUSTOM_CATEGORIES = [c for c in _CUSTOM_CATEGORIES if c != name]
     return {"ok": True}
+
+
+@router.post("/{order_id}/geocode")
+async def geocode_order(order_id: str):
+    _validate_uuid(order_id, "order_id")
+    supabase = get_supabase()
+    order = supabase.select("repair_orders", "id,location,lat,lng").eq("id", order_id).single().execute()
+    if not order.data:
+        raise HTTPException(status_code=404, detail="工单不存在")
+    location = order.data.get("location", "")
+    if not location:
+        raise HTTPException(status_code=400, detail="工单无位置信息")
+    result = await geocode(location)
+    if not result:
+        raise HTTPException(status_code=400, detail="地理编码失败，请检查地址")
+    supabase.update("repair_orders", {"lat": result["lat"], "lng": result["lng"]}, {"id": f"eq.{order_id}"})
+    return {"lat": result["lat"], "lng": result["lng"], "formatted": result.get("formatted", location)}
 
 
 def _enrich_orders(orders: list, supabase):

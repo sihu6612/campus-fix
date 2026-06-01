@@ -35,6 +35,7 @@ class OrderCreate(BaseModel):
     description: str = ""
     image_urls: List[str] = []
     urgency: str = "normal"
+    urgency_score: int = 0
     ai_analysis: Optional[dict] = None
     suggested_parts: List[str] = []
     complexity: str = "simple"
@@ -50,6 +51,7 @@ class OrderUpdate(BaseModel):
     description: Optional[str] = None
     complexity: Optional[str] = None
     urgency: Optional[str] = None
+    urgency_score: Optional[int] = None
 
 
 class BatchUpdate(BaseModel):
@@ -70,6 +72,7 @@ class OrderResponse(BaseModel):
     complexity: str
     status: str
     urgency: str
+    urgency_score: int = 0
     rating: Optional[int] = None
     review: str = ""
     created_at: datetime
@@ -115,6 +118,7 @@ class ImageAnalysisResult(BaseModel):
     suggested_parts: List[str] = []
     complexity: str = "simple"
     urgency: str = "normal"
+    urgency_score: int = 0
     confidence: float = 0.0
 
 

@@ -10,6 +10,7 @@ const routes = [
   { path: '/student/confirm/:id', name: 'student-confirm', component: () => import('../views/student/ConfirmFix.vue'), meta: { layout: true, title: '确认完工', showBack: true } },
   { path: '/worker', name: 'worker-home', component: () => import('../views/worker/WorkerHome.vue'), meta: { layout: true, title: '师傅工作台' } },
   { path: '/worker/order/:id', name: 'worker-order', component: () => import('../views/worker/WorkOrder.vue'), meta: { layout: true, title: '工单操作', showBack: true, backTo: '/worker' } },
+  { path: '/worker/route', name: 'worker-route', component: () => import('../views/worker/RouteMap.vue'), meta: { layout: false, title: '维修路线' } },
   { path: '/admin', name: 'admin-dashboard', component: () => import('../views/admin/AdminDashboard.vue'), meta: { layout: true, title: '物业管理' } },
   { path: '/admin/order/:id', name: 'admin-order', component: () => import('../views/student/OrderDetail.vue'), meta: { layout: true, title: '工单详情', showBack: true, backTo: '/admin' } },
   { path: '/counselor', name: 'counselor-home', component: () => import('../views/counselor/CounselorHome.vue'), meta: { layout: true, title: '班级管理' } },
